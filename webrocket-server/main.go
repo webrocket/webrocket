@@ -38,6 +38,7 @@ var (
 	CertFile      string
 	KeyFile       string
 	StorageDir    string
+	Daemon        bool
 )
 
 var (
@@ -53,6 +54,7 @@ func init() {
 	flag.StringVar(&CertFile, "cert", "", "path to server certificate")
 	flag.StringVar(&KeyFile, "key", "", "private key")
 	flag.StringVar(&StorageDir, "storage-dir", "/var/lib/webrocket", "path to webrocket's internal data-store")
+	flag.BoolVar(&Daemon, "daemon", false, "run in the background")
 	flag.Parse()
 
 	StorageDir, _ = filepath.Abs(StorageDir)
@@ -128,8 +130,8 @@ func SignalTrap() {
 	}
 }
 
-func SetupDaemon() {
-	fmt.Printf("\n\033[32mWebRocket has been launched!\033[0m\n")
+func Daemonize() int {
+	return 0
 }
 
 func DisplayAsciiArt() {
@@ -165,15 +167,19 @@ func DisplaySystemSettings() {
 	fmt.Printf("Websocket endpoint : ws://%s\n", WebsocketAddr)
 	fmt.Printf("Backend endpoint   : wr://%s\n", BackendAddr)
 	fmt.Printf("Admin endpoint     : http://%s\n", AdminAddr)
+
+	fmt.Printf("\n\033[32mWebRocket has been launched!\033[0m\n")
 }
 
 func main() {
+	if Daemon {
+		Daemonize()
+	}
 	DisplayAsciiArt()
 	SetupContext()
 	SetupEndpoint("backend endpoint", ctx.NewBackendEndpoint(BackendAddr))
 	SetupEndpoint("websocket endpoint", ctx.NewWebsocketEndpoint(WebsocketAddr))
 	SetupEndpoint("admin endpoint", ctx.NewAdminEndpoint(AdminAddr))
 	DisplaySystemSettings()
-	SetupDaemon()
 	SignalTrap()
 }
