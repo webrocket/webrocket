@@ -413,7 +413,7 @@ func (b *BackendEndpoint) Trigger(vhost *Vhost, payload interface{}) error {
 		return errors.New("invalid vhost")
 	}
 	lobby := b.lobbys.Match(vhost.Path())
-	if lobby != nil {
+	if lobby == nil {
 		// Something's fucked up, should never happen...
 		return errors.New("no lobby found for the specified vhost")
 	}

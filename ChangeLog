@@ -1,6 +1,7 @@
 2012-01-20  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* distro/archlinux/rc.d/webrocket: created an init script for arch linux 
+	* webrocket/: backend proto fixes and optimization
 
 2012-01-19  Krzysztof Kowalik  <chris@nu7hat.ch>
 

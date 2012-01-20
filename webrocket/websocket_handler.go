@@ -367,7 +367,10 @@ func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
 			return "Internal error", 597
 		}
 		backend := h.vhost.ctx.backend
-		backend.Trigger(h.vhost, &map[string]interface{}{triggerName: data})
+		err = backend.Trigger(h.vhost, map[string]interface{}{triggerName: data})
+		if err != nil {
+			return "Internal error", 597
+		}
 	}
 	return "Broadcasted", 204
 }
@@ -388,7 +391,8 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 	var ok bool
 	var eventName string
 	var data map[string]interface{}
-
+	var err error
+	
 	if eventName, ok = msg.Get("event").(string); eventName == "" {
 		// Event name not found, invalid payload!
 		return "Bad request", 400
@@ -409,7 +413,10 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 	// it forward...
 	data["sid"] = c.Id()
 	backend := h.vhost.ctx.backend
-	backend.Trigger(h.vhost, &map[string]interface{}{eventName: data})
+	err = backend.Trigger(h.vhost, map[string]interface{}{eventName: data})
+	if err != nil {
+		return "Internal error", 597
+	} 
 	return "Triggered", 205
 }
 

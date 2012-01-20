@@ -83,12 +83,12 @@ func (c *backendConnection) Recv() (req *backendRequest, err error) {
 //
 // Returns an error if something went wrong.
 func (c *backendConnection) Send(cmd string, frames ...string) (err error) {
+	payload := cmd + "\n"
+	payload += strings.Join(frames, "\n")
+	payload += "\n\r\n\r\n"
 	c.mtx.Lock()
 	defer c.mtx.Unlock()
 	if c.conn != nil {
-		payload := cmd + "\n"
-		payload += strings.Join(frames, "\n")
-		payload += "\n\r\n\r\n"
 		_, err = c.conn.Write([]byte(payload))
 	}
 	return

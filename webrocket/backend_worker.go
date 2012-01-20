@@ -24,7 +24,7 @@ import (
 
 // Backend worker defaults.
 const (
-	backendWorkerHeartbeatInterval = 2 * time.Second
+	backendWorkerHeartbeatInterval = 1000 * time.Millisecond
 	backendWorkerHeartbeatLiveness = 3
 	backendWorkerHeartbeatExpiry   = backendWorkerHeartbeatInterval * backendWorkerHeartbeatLiveness
 )
@@ -79,7 +79,14 @@ func (a *BackendWorker) updateExpiration() {
 // by exchanging the hearbeats.
 func (a *BackendWorker) listen() {
 	defer a.Kill()
-	a.conn.SetTimeout(int64(backendWorkerHeartbeatInterval))
+	go func() {
+		for {
+			// Send the heartbeat message and update schedule if it's time.
+			a.conn.Send("HB")
+			a.heartbeatAt = time.Now().Add(backendWorkerHeartbeatInterval)
+			<-time.After(backendWorkerHeartbeatInterval)
+		}
+	}()
 	for {
 		if !a.IsAlive() {
 			break
@@ -96,11 +103,6 @@ func (a *BackendWorker) listen() {
 			case "QT": // Quit
 				break
 			}
-		}
-		if a.heartbeatAt.Before(time.Now()) {
-			// Send the heartbeat message and update schedule if it's time.
-			a.conn.Send("HB")
-			a.heartbeatAt = time.Now().Add(backendWorkerHeartbeatInterval)
 		}
 	}
 }

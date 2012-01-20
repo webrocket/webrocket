@@ -211,6 +211,9 @@ func (ch *Channel) unsubscribe(client *WebsocketConnection, data map[string]inte
 		if ch.IsPresence() && !s.IsHidden() {
 			// Tell the others that this guy is not subscribing the
 			// channel anymore.
+			for k, v := range s.Data() {
+				data[k] = v
+			}
 			data["sid"] = sid
 			data["channel"] = ch.name
 			ch.broadcast <- &payload{true, map[string]interface{}{"__memberLeft": data}}
