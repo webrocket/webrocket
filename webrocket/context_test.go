@@ -115,7 +115,7 @@ func TestContextVhostsList(t *testing.T) {
 
 func TestContextCookiesGeneration(t *testing.T) {
 	ctx := NewContext()
-	ctx.SetStorage("/tmp")
+	ctx.SetStorageDir("/tmp")
 	ctx.GenerateCookie(false)
 	cookieFile := "/tmp/"+DefaultNodeName()+".cookie"
 	f, err := os.Open(cookieFile)
@@ -129,6 +129,16 @@ func TestContextCookiesGeneration(t *testing.T) {
 	}
 	f.Close()
 	os.Remove(cookieFile)
+}
+
+func TestContextSetNodeName(t *testing.T) {
+	ctx := NewContext()
+	if err := ctx.SetNodeName("&**()"); err == nil {
+		t.Errorf("Expected error while setting invalid node name")
+	}
+	if err := ctx.SetNodeName("foo"); err != nil {
+		t.Errorf("Expected to set valid node name without errors")
+	}
 }
 
 func TestContextNewWebsocketEndpoint(t *testing.T) {

@@ -29,37 +29,44 @@ import (
 	"time"
 )
 
-type Config struct {
-	Backend    string
-	Websocket  string
-	Admin      string
-	CertFile   string
-	KeyFile    string
-	StorageDir string
-}
+// Configuration variables.
+var (
+	BackendAddr   string
+	WebsocketAddr string
+	AdminAddr     string
+	NodeName      string
+	CertFile      string
+	KeyFile       string
+	StorageDir    string
+)
 
 var (
-	conf Config
-	ctx  *webrocket.Context
-	s    stepper.Stepper
+	ctx *webrocket.Context
+	s   stepper.Stepper
 )
 
 func init() {
-	flag.StringVar(&conf.Websocket, "websocket-addr", ":8080", "websocket endpoint address")
-	flag.StringVar(&conf.Backend, "backend-addr", ":8081", "backend endpoint address")
-	flag.StringVar(&conf.Admin, "admin-addr", ":8082", "admin endpoint address")
-	flag.StringVar(&conf.CertFile, "cert", "", "path to server certificate")
-	flag.StringVar(&conf.KeyFile, "key", "", "private key")
-	flag.StringVar(&conf.StorageDir, "storage-dir", "/var/lib/webrocket", "path to webrocket's internal data-store")
+	flag.StringVar(&WebsocketAddr, "websocket-addr", ":8080", "websocket endpoint address")
+	flag.StringVar(&BackendAddr, "backend-addr", ":8081", "backend endpoint address")
+	flag.StringVar(&AdminAddr, "admin-addr", ":8082", "admin endpoint address")
+	flag.StringVar(&NodeName, "node-name", "", "name of the node")
+	flag.StringVar(&CertFile, "cert", "", "path to server certificate")
+	flag.StringVar(&KeyFile, "key", "", "private key")
+	flag.StringVar(&StorageDir, "storage-dir", "/var/lib/webrocket", "path to webrocket's internal data-store")
 	flag.Parse()
 
-	conf.StorageDir, _ = filepath.Abs(conf.StorageDir)
+	StorageDir, _ = filepath.Abs(StorageDir)
 }
 
 func SetupContext() {
 	s.Start("Initializing context")
 	ctx = webrocket.NewContext()
-	ctx.SetStorageDir(conf.StorageDir)
+	ctx.SetStorageDir(StorageDir)
+	if NodeName != "" {
+		if err := ctx.SetNodeName(NodeName); err != nil {
+			s.Fail(err.Error(), true)
+		}
+	}
 	s.Ok()
 	s.Start("Locking node")
 	if err := ctx.Lock(); err != nil {
@@ -82,8 +89,8 @@ func SetupEndpoint(kind string, e webrocket.Endpoint) {
 	go func() {
 		var err error
 		s.Start("Starting %s", kind)
-		if conf.CertFile != "" && conf.KeyFile != "" {
-			err = e.ListenAndServeTLS(conf.CertFile, conf.KeyFile)
+		if CertFile != "" && KeyFile != "" {
+			err = e.ListenAndServeTLS(CertFile, KeyFile)
 		} else {
 			err = e.ListenAndServe()
 		}
@@ -155,17 +162,17 @@ func DisplaySystemSettings() {
 	fmt.Printf("Node               : %s\n", ctx.NodeName())
 	fmt.Printf("Cookie             : %s\n", ctx.Cookie())
 	fmt.Printf("Data store dir     : %s\n", ctx.StorageDir())
-	fmt.Printf("Websocket endpoint : ws://%s\n", conf.Websocket)
-	fmt.Printf("Backend endpoint   : wr://%s\n", conf.Backend)
-	fmt.Printf("Admin endpoint     : http://%s\n", conf.Admin)
+	fmt.Printf("Websocket endpoint : ws://%s\n", WebsocketAddr)
+	fmt.Printf("Backend endpoint   : wr://%s\n", BackendAddr)
+	fmt.Printf("Admin endpoint     : http://%s\n", AdminAddr)
 }
 
 func main() {
 	DisplayAsciiArt()
 	SetupContext()
-	SetupEndpoint("backend endpoint", ctx.NewBackendEndpoint(conf.Backend))
-	SetupEndpoint("websocket endpoint", ctx.NewWebsocketEndpoint(conf.Websocket))
-	SetupEndpoint("admin endpoint", ctx.NewAdminEndpoint(conf.Admin))
+	SetupEndpoint("backend endpoint", ctx.NewBackendEndpoint(BackendAddr))
+	SetupEndpoint("websocket endpoint", ctx.NewWebsocketEndpoint(WebsocketAddr))
+	SetupEndpoint("admin endpoint", ctx.NewAdminEndpoint(AdminAddr))
 	DisplaySystemSettings()
 	SetupDaemon()
 	SignalTrap()

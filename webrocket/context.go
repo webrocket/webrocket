@@ -25,10 +25,14 @@ import (
 	"os"
 	"path"
 	"sync"
+	"regexp"
 )
 
 // The length of the cookie string.
 const CookieSize = 40
+
+// The pattern used to validate node name.
+var validNodeNamePattern = regexp.MustCompile("^[\\d\\w\\.\\-\\_].+$")
 
 // Context implements a placeholder for general WebRocket's configuration
 // and shared data. It's not possible to create any of the components without
@@ -237,8 +241,12 @@ lock:
 //
 // newName - The new node name to be set.
 //
-func (ctx *Context) SetNodeName(newName string) {
+func (ctx *Context) SetNodeName(newName string) error {
+	if !validNodeNamePattern.MatchString(newName) {
+		return errors.New("invalid node name")
+	}
 	ctx.nodeName = newName
+	return nil
 }
 
 // NodeName returns a configured node name.
