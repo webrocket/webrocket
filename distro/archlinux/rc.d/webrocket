@@ -1,0 +1,56 @@
+#!/bin/bash
+
+. /etc/rc.conf
+. /etc/rc.d/functions
+
+PID=`cat /var/run/webrocket.pid 2>/dev/null`
+case "$1" in
+    start)
+        stat_busy "Starting Webrocket Server"
+        mkdir -p /var/lib/webrocket
+        RESULT=$?
+        if [ $RESULT -eq 0 ]; then
+            if [ -z "$PID" ]; then
+                /usr/bin/webrocket-server &>/dev/null
+                RESULT=$?
+            else
+                WEBROCKET_PID=`pidof webrocket-server`
+                if [ -z "$WEBROCKET_PID" ]; then
+                    /usr/bin/webrocket-server &>/dev/null
+                    RESULT=$?
+                elif [ `pidof webrocket-server` -eq $PID ]; then
+                    RESULT=1
+                else
+                    /usr/bin/webrocket-server &>/dev/null
+                    RESULT=$?
+                fi
+            fi
+        fi
+        if [ $RESULT -gt 0 ]; then
+            echo -ne "Couldn't start the server!"
+            stat_fail
+        else
+            add_daemon webrocket
+            stat_done
+        fi
+        ;;
+    stop)
+        stat_busy "Stopping Webrocket Server"
+        [ ! -z "$PID" ]  && kill $PID &> /dev/null
+        if [ $? -gt 0 ]; then
+            stat_fail
+        else
+            rm /var/run/webrocket.pid
+            rm_daemon webrocket
+            stat_done
+        fi
+        ;;
+    restart)
+        $0 stop
+        sleep 1
+        $0 start
+        ;;
+    *)
+        echo "usage: $0 {start|stop|restart}"
+esac
+exit 0

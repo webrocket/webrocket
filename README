@@ -45,6 +45,9 @@ explanation what you can find in there.
 'deps'::
 	External dependencies bundled with the project
 
+'distros'::
+	Tools and files specific for various operating systems
+    
 'webrocket'::
 	WebRocket core library
 
