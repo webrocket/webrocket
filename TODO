@@ -3,6 +3,7 @@ TODO list
 
 webrocket
 ---------
+* access control for the triggered backend actions
 * clustering support
 * add direct message action (but first investigate if really needed)
 * test admin endpoint & its protocol 

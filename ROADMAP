@@ -5,8 +5,8 @@ v0.3.x
 ------
 * [x] bidirectional tie between backend and websockets
 * [x] persistent configuration
-* [ ] presence/private channels
-* [x] basic authentication
+* [x] presence/private channels
+* [x] basic (safe enough) authentication and access control
 * [x] admin endpoint and management tool
 
 v0.4.x
