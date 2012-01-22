@@ -63,7 +63,9 @@ func init() {
 func SetupContext() {
 	s.Start("Initializing context")
 	ctx = webrocket.NewContext()
-	ctx.SetStorageDir(StorageDir)
+	if err := ctx.SetStorageDir(StorageDir); err != nil {
+		s.Fail(err.Error(), true)
+	}
 	if NodeName != "" {
 		if err := ctx.SetNodeName(NodeName); err != nil {
 			s.Fail(err.Error(), true)
@@ -131,6 +133,7 @@ func SignalTrap() {
 }
 
 func Daemonize() int {
+	// TODO: ...
 	return 0
 }
 

@@ -150,6 +150,7 @@ func (ctx *Context) GenerateCookie(force bool) (err error) {
 		return
 	}
 	cookieFile.Write([]byte(ctx.cookie))
+	cookieFile.Chmod(0644)
 	cookieFile.Close()
 	return
 }
@@ -159,9 +160,14 @@ func (ctx *Context) GenerateCookie(force bool) (err error) {
 //
 // dir - A path to the storage directory.
 //
-func (ctx *Context) SetStorageDir(dir string) {
+// Returns an error when something went wrong.
+func (ctx *Context) SetStorageDir(dir string) (err error) {
+	if err = os.MkdirAll(dir, 0766); err != nil {
+		return
+	}
 	ctx.storageDir = dir
 	ctx.storageOn = false
+	return
 }
 
 // StorageDir returns path to the configured storage directory.

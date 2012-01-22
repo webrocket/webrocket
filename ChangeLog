@@ -1,3 +1,8 @@
+2012-01-22  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* webrocket-server/main.go: locking and storage fixes
+	* webrocket/context.go: locking and storage fixes
+
 2012-01-20  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* distro/archlinux/rc.d/webrocket: created an init script for arch linux 
