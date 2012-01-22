@@ -78,8 +78,7 @@ func newBackendEndpoint(ctx *Context, addr string) *BackendEndpoint {
 // vhost - The vhost to be registered.
 //
 func (b *BackendEndpoint) registerVhost(vhost *Vhost) {
-	l := newBackendLobby()
-	b.lobbys.AddLobby(vhost.Path(), l)
+	b.lobbys.AddLobby(vhost.Path(), vhost.lobby)
 }
 
 // unregisterVhost removes a handler for the specified vhost if such has
@@ -187,18 +186,15 @@ log:
 // Returns a status message and code. 
 func (b *BackendEndpoint) dispatchDealer(vhost *Vhost, req *backendRequest,
 	idty *backendIdentity) (string, int) {
-	var worker *BackendWorker
-	var lobby *backendLobby
-
-	if lobby = b.lobbys.Match(vhost.Path()); lobby == nil {
+	if vhost.lobby == nil {
 		// Something's fucked up, it should never happen...
 		return "Internal error", 597
 	}
 	switch req.Command {
 	case "RD": // Ready
-		worker = newBackendWorker(req.conn, idty.Id)
-		lobby.addWorker(worker)
-		defer lobby.deleteWorker(worker)
+		worker := newBackendWorker(req.conn, idty.Id)
+		vhost.lobby.addWorker(worker)
+		defer vhost.lobby.deleteWorker(worker)
 		// Blocking in here, keeping worker alive.
 		worker.listen()
 		return "Disconnected", 309
@@ -412,12 +408,11 @@ func (b *BackendEndpoint) Trigger(vhost *Vhost, payload interface{}) error {
 	if vhost == nil {
 		return errors.New("invalid vhost")
 	}
-	lobby := b.lobbys.Match(vhost.Path())
-	if lobby == nil {
+	if vhost.lobby == nil {
 		// Something's fucked up, should never happen...
 		return errors.New("no lobby found for the specified vhost")
 	}
-	lobby.Enqueue(payload)
+	vhost.lobby.Enqueue(payload)
 	return nil
 }
 

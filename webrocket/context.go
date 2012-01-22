@@ -317,6 +317,7 @@ func (ctx *Context) DeleteVhost(path string) (err error) {
 			return
 		}
 	}
+	vhost.Kill()
 	delete(ctx.vhosts, path)
 	return
 }

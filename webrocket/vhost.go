@@ -37,6 +37,8 @@ type Vhost struct {
 	accessToken string
 	// List of channels opened within the vhost. 
 	channels map[string]*Channel
+	// Related backend lobby
+	lobby *backendLobby
 	// List of permissions generated for the vhost.
 	permissions map[string]*Permission
 	// Parent context.
@@ -76,6 +78,7 @@ func newVhost(ctx *Context, path string) (v *Vhost, err error) {
 		ctx:         ctx,
 		channels:    make(map[string]*Channel),
 		permissions: make(map[string]*Permission),
+		lobby:       newBackendLobby(),
 	}
 	return
 }
@@ -233,4 +236,14 @@ func (v *Vhost) Channels() map[string]*Channel {
 	v.cmtx.Lock()
 	defer v.cmtx.Unlock()
 	return v.channels
+}
+
+// Kill stops execution of this vhost.
+func (v *Vhost) Kill() {
+	// No need to lock, internal channels' and lobby's locks will be
+	// used in here.
+	for _, channel := range v.Channels() {
+		channel.Kill()
+	}
+	v.lobby.Kill()
 }
