@@ -2,6 +2,7 @@
 
 	* webrocket-server/main.go: locking and storage fixes
 	* webrocket/context.go: locking and storage fixes
+	* webrocket/channel.go: optimized broadcasting
 
 2012-01-20  Krzysztof Kowalik  <chris@nu7hat.ch>
 

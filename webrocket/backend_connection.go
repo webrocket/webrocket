@@ -60,19 +60,28 @@ func (c *backendConnection) Recv() (req *backendRequest, err error) {
 		}
 		msg = append(msg[:], chunk[:len(chunk)-1])
 	}
-	// <<<
-	// identity\n
-	// \n
-	// commany\n
-	// ...
-	// >>>
-	if len(msg) < 3 {
+	if len(msg) < 1 {
 		err = errors.New("bad request")
 		return
 	}
-	// Compose the request object.
-	aid, cmd := msg[0], msg[2]
-	req = newBackendRequest(c, aid, cmd, msg[3:])
+	var aid, cmd []byte
+	var from int
+	if len(msg) >= 3 && len(msg[1]) == 0 {
+		// <<<
+		// identity\n
+		// \n
+		// command\n
+		// ...
+		// >>>
+		aid, cmd, from = msg[0], msg[2], 3
+	} else {
+		// <<<
+		// command\n
+		// ...
+		// >>>
+		aid, cmd, from = nil, msg[0], 1
+	}
+	req = newBackendRequest(c, aid, cmd, msg[from:])
 	return
 }
 

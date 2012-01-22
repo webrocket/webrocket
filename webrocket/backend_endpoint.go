@@ -296,7 +296,7 @@ func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) 
 	}
 	// Extending data with the channel name before pass it forward.
 	data["channel"] = chanName
-	channel.Broadcast(map[string]interface{}{eventName: data})
+	channel.Broadcast(map[string]interface{}{eventName: data}, false)
 	req.Reply("OK")
 	return "Broadcasted", 204
 }

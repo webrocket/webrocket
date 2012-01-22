@@ -358,7 +358,7 @@ func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
 	// passing it forward...
 	data["sid"] = c.Id()
 	data["channel"] = chanName
-	channel.Broadcast(map[string]interface{}{eventName: data})
+	channel.Broadcast(map[string]interface{}{eventName: data}, false)
 	// If the `trigger` param specified, then we have to send an event
 	// to the backend agent.
 	if triggerName != "" {

@@ -24,7 +24,7 @@ import (
 
 // Backend worker defaults.
 const (
-	backendWorkerHeartbeatInterval = 1000 * time.Millisecond
+	backendWorkerHeartbeatInterval = 500 * time.Millisecond
 	backendWorkerHeartbeatLiveness = 3
 	backendWorkerHeartbeatExpiry   = backendWorkerHeartbeatInterval * backendWorkerHeartbeatLiveness
 )

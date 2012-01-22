@@ -481,12 +481,6 @@ func testWebsocketPresenceChannelUnsubscribeBehaviour(t *testing.T,
 	}
 }
 
-func testBackendBadRequest(t *testing.T, c net.Conn) {
-	c = backendDial(t)
-	backendSend(t, c, "bad request")
-	backendExpectError(t, c, 400)
-}
-
 func testBackendBadIdentity(t *testing.T, c net.Conn) {
 	c = backendDial(t)
 	backendSend(t, c, "bad identity", "", "OC", "test")
@@ -671,7 +665,6 @@ func TestAllTheThings(t *testing.T) {
 		wss[i] = nil
 	}
 
-	testBackendBadRequest(t, req)
 	testBackendBadIdentity(t, req)
 	testBackendOpenChannelWithoutName(t, req)
 	testBackendOpenChannelWithInvalidName(t, req)

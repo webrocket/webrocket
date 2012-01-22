@@ -25,22 +25,6 @@ import (
 // Pattern used to validate a channel name.
 var validChannelNamePattern = regexp.MustCompile("^[\\w\\d\\_][\\w\\d\\-\\_\\.]*$")
 
-// Internal types
-// -----------------------------------------------------------------------------
-
-// payload implements a structure used to broadcast information on the
-// channels. If includeHidden is false, then message will not be send
-// to hidden subscribers. 
-type payload struct {
-	// Send to hidden subscribers as well.
-	includeHidden bool
-	// Data's payload.
-	payload map[string]interface{}
-}
-
-// Exported types
-// -----------------------------------------------------------------------------
-
 // ChannelType represents a type of the channel. Can be normal, private
 // or presence.
 type ChannelType int
@@ -61,8 +45,8 @@ type Channel struct {
 	kind ChannelType
 	// List of subscribers.
 	subscribers map[string]*Subscription
-	// Broadcasting channel.
-	broadcast chan *payload
+	// Channel's state.
+	alive bool
 	// Internal semaphore.
 	mtx sync.Mutex
 }
@@ -89,9 +73,9 @@ func newChannel(name string, kind ChannelType) (ch *Channel, err error) {
 		name:        name,
 		kind:        kind,
 		subscribers: make(map[string]*Subscription),
-		broadcast:   make(chan *payload),
+		alive:       true,
 	}
-	go ch.broadcastLoop()
+	//go ch.broadcastLoop()
 	return
 }
 
@@ -114,26 +98,6 @@ func channelTypeFromName(name string) (t ChannelType) {
 		}
 	}
 	return ChannelNormal
-}
-
-// broadcastLoop runs a broadcaster's event loop.
-func (ch *Channel) broadcastLoop() {
-	for x := range ch.broadcast {
-		// FIXME: make it nonblock!
-		for _, s := range ch.Subscribers() {
-			if s.IsHidden() && !x.includeHidden {
-				// Skip hidden subscriber.
-				continue
-			}
-			if client := s.Client(); client != nil {
-				client.Send(x.payload)
-			}
-		}
-	}
-	// Delete all subscribers after the channel is killed. 
-	for _, s := range ch.Subscribers() {
-		ch.unsubscribe(s.Client(), map[string]interface{}{}, false)
-	}
 }
 
 // subscribe appends given client to the list of subscribers. If hidden
@@ -176,7 +140,7 @@ func (ch *Channel) subscribe(client *WebsocketConnection, hidden bool, data map[
 		ch.mtx.Unlock()
 		if ch.IsPresence() && !hidden {
 			// Tell everyone that someone joined the channel.
-			ch.broadcast <- &payload{true, map[string]interface{}{"__memberJoined": data}}
+			ch.Broadcast(map[string]interface{}{"__memberJoined": data}, true)
 		}
 	}
 }
@@ -216,7 +180,7 @@ func (ch *Channel) unsubscribe(client *WebsocketConnection, data map[string]inte
 			}
 			data["sid"] = sid
 			data["channel"] = ch.name
-			ch.broadcast <- &payload{true, map[string]interface{}{"__memberLeft": data}}
+			ch.Broadcast(map[string]interface{}{"__memberLeft": data}, true)
 		}
 	}
 }
@@ -275,10 +239,17 @@ func (ch *Channel) Subscribers() map[string]*Subscription {
 //
 // x - The data to be broadcasted to all the subscribers.
 //
-func (ch *Channel) Broadcast(x map[string]interface{}) {
-	if ch.IsAlive() {
-		ch.broadcast <- &payload{false, x}
-	}
+func (ch *Channel) Broadcast(x map[string]interface{}, includeHidden bool) {
+	go func(subscribers map[string]*Subscription) {
+		for _, s := range subscribers {
+			if s.IsHidden() && !includeHidden {
+				continue
+			}
+			if client := s.Client(); client != nil {
+				client.Send(x)
+			}
+		}
+	}(ch.Subscribers())
 }
 
 // IsAlive returns whether the channels is alive or not. Threadsafe, May be
@@ -286,7 +257,7 @@ func (ch *Channel) Broadcast(x map[string]interface{}) {
 func (ch *Channel) IsAlive() bool {
 	ch.mtx.Lock()
 	defer ch.mtx.Unlock()
-	return ch.broadcast != nil
+	return ch.alive
 }
 
 // Kill closes the channel's broadcaster and marks it as dead. Threadsafe, 
@@ -295,8 +266,10 @@ func (ch *Channel) IsAlive() bool {
 func (ch *Channel) Kill() {
 	ch.mtx.Lock()
 	defer ch.mtx.Unlock()
-	if ch.broadcast != nil {
-		close(ch.broadcast)
-		ch.broadcast = nil
+	if ch.alive {
+		ch.alive = false
+		for _, s := range ch.subscribers {
+			ch.unsubscribe(s.Client(), map[string]interface{}{}, false)
+		}
 	}
 }
