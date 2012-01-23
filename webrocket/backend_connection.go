@@ -103,11 +103,6 @@ func (c *backendConnection) Send(cmd string, frames ...string) (err error) {
 	return
 }
 
-// SetTimeout sets a receiver's timeout of the underlaying connection. 
-func (c *backendConnection) SetTimeout(nsec int64) {
-	c.conn.SetReadTimeout(nsec)
-}
-
 // IsAlive returns whether the underlaying connection is alive or not.
 func (c *backendConnection) IsAlive() bool {
 	c.mtx.Lock()

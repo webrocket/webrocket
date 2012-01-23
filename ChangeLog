@@ -5,6 +5,7 @@
 	* webrocket/channel.go: optimized broadcasting
 	* webrocket/vhost.go: added Kill function and direct access to lobby
 	* webrocket/backend_endpoint.go: optimized access to vhost's lobby
+	* webrocket/backend_connection.go: removed unused timeout
 
 2012-01-20  Krzysztof Kowalik  <chris@nu7hat.ch>
 
