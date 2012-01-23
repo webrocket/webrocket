@@ -56,7 +56,7 @@ func newWebsocketConnection(ws *websocket.Conn) (c *WebsocketConnection) {
 	// Send info that connection has been approved. Yeah,
 	// Bruce Lee approves!
 	c.Send(map[string]interface{}{
-		"__connected": map[string]interface{}{
+		":connected": map[string]interface{}{
 			"sid": c.Id(),
 		},
 	})
@@ -76,7 +76,7 @@ func (c *WebsocketConnection) authenticate(p *Permission) {
 	c.permission = p
 	if p != nil {
 		c.Send(map[string]interface{}{
-			"__authenticated": map[string]interface{}{},
+			":authenticated": map[string]interface{}{},
 		})
 	}
 }

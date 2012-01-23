@@ -173,7 +173,7 @@ func (h *websocketHandler) logStatus(c *WebsocketConnection, status string,
 		// TODO: make the answers only when the client's debug mode is
 		// enabled or some 'optional errors' flag enabled or smth...
 		c.Send(map[string]interface{}{
-			"__error": map[string]interface{}{
+			":error": map[string]interface{}{
 				"code":   code,
 				"status": status,
 			},

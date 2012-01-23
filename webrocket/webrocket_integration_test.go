@@ -84,14 +84,13 @@ func websocketExpectResponse(t *testing.T, ws *websocket.Conn, event string,
 }
 
 func websocketExpectError(t *testing.T, ws *websocket.Conn, status string) {
-	websocketExpectResponse(t, ws, "__error", map[string]*regexp.Regexp{
+	websocketExpectResponse(t, ws, ":error", map[string]*regexp.Regexp{
 		"status": regexp.MustCompile("^" + status + "$"),
 	})
 }
 
 func backendDial(t *testing.T) net.Conn {
 	c, err := net.Dial("tcp", "127.0.0.1:9081")
-	c.SetReadTimeout((5 * time.Second).Nanoseconds())
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
@@ -153,7 +152,7 @@ func backendIdty() string {
 }
 
 func testWebsocketConnect(t *testing.T, ws *websocket.Conn) {
-	websocketExpectResponse(t, ws, "__connected", map[string]*regexp.Regexp{
+	websocketExpectResponse(t, ws, ":connected", map[string]*regexp.Regexp{
 		"sid": regexp.MustCompile("^.{36}$"),
 	})
 }
@@ -204,7 +203,7 @@ func testWebsocketAuthenticationWithValidToken(t *testing.T,
 			"token": token,
 		},
 	})
-	websocketExpectResponse(t, ws, "__authenticated", nil)
+	websocketExpectResponse(t, ws, ":authenticated", nil)
 }
 
 func testWebsocketSubscribeWithoutChannelName(t *testing.T,
@@ -252,7 +251,7 @@ func testWebsocketSubscribeToPublicChannel(t *testing.T,
 			"channel": "test",
 		},
 	})
-	websocketExpectResponse(t, ws, "__subscribed",
+	websocketExpectResponse(t, ws, ":subscribed",
 		map[string]*regexp.Regexp{
 			"channel": regexp.MustCompile("^test$"),
 		})
@@ -285,7 +284,7 @@ func testWebsocketSubscribeToPrivateChannelWithAuthentication(t *testing.T,
 			"channel": "private-test",
 		},
 	})
-	websocketExpectResponse(t, ws, "__subscribed", map[string]*regexp.Regexp{
+	websocketExpectResponse(t, ws, ":subscribed", map[string]*regexp.Regexp{
 		"channel": regexp.MustCompile("^private-test$"),
 	})
 }
@@ -297,10 +296,10 @@ func testWebsocketSubscribeToPresenceChannelWithAuthentication(t *testing.T,
 			"channel": "presence-test",
 		},
 	})
-	websocketExpectResponse(t, ws, "__subscribed", map[string]*regexp.Regexp{
+	websocketExpectResponse(t, ws, ":subscribed", map[string]*regexp.Regexp{
 		"channel": regexp.MustCompile("^presence-test$"),
 	})
-	websocketExpectResponse(t, ws, "__memberJoined", nil)
+	websocketExpectResponse(t, ws, ":memberJoined", nil)
 }
 
 func testWebsocketUnsubscribeWithoutChannelName(t *testing.T,
@@ -348,7 +347,7 @@ func testWebsocketUnsubscribeSubscribedChannel(t *testing.T,
 			"channel": "test",
 		},
 	})
-	websocketExpectResponse(t, ws, "__unsubscribed",
+	websocketExpectResponse(t, ws, ":unsubscribed",
 		map[string]*regexp.Regexp{
 			"channel": regexp.MustCompile("^test$"),
 		})
@@ -438,7 +437,7 @@ func testWebsocketPresenceChannelSubscribeBehaviour(t *testing.T,
 				"data":    map[string]interface{}{"foo": "bar"},
 			},
 		})
-		msg := websocketExpectResponse(t, wss[i], "__subscribed",
+		msg := websocketExpectResponse(t, wss[i], ":subscribed",
 			map[string]*regexp.Regexp{
 				"channel": regexp.MustCompile("^presence-test$"),
 			})
@@ -447,7 +446,7 @@ func testWebsocketPresenceChannelSubscribeBehaviour(t *testing.T,
 			t.Errorf("Expected to get valid list of subscribers, got %v", subscribers)
 		}
 		for j := range wss[:i+1] {
-			websocketExpectResponse(t, wss[j], "__memberJoined",
+			websocketExpectResponse(t, wss[j], ":memberJoined",
 				map[string]*regexp.Regexp{
 					"sid":     regexp.MustCompile("^.{36}"),
 					"channel": regexp.MustCompile("^presence-test$"),
@@ -466,12 +465,12 @@ func testWebsocketPresenceChannelUnsubscribeBehaviour(t *testing.T,
 				"data":    map[string]interface{}{"bar": "foo"},
 			},
 		})
-		websocketExpectResponse(t, wss[i], "__unsubscribed",
+		websocketExpectResponse(t, wss[i], ":unsubscribed",
 			map[string]*regexp.Regexp{
 				"channel": regexp.MustCompile("^presence-test$"),
 			})
 		for j := range wss[i+1:] {
-			websocketExpectResponse(t, wss[j+i+1], "__memberLeft",
+			websocketExpectResponse(t, wss[j+i+1], ":memberLeft",
 				map[string]*regexp.Regexp{
 					"sid":     regexp.MustCompile("^.{36}"),
 					"channel": regexp.MustCompile("^presence-test$"),

@@ -134,13 +134,13 @@ func (ch *Channel) subscribe(client *WebsocketConnection, hidden bool, data map[
 		if ch.IsPresence() {
 			sdata["subscribers"] = subscribers
 		}
-		client.Send(map[string]interface{}{"__subscribed": sdata})
+		client.Send(map[string]interface{}{":subscribed": sdata})
 		ch.subscribers[sid] = newSubscription(client, hidden, data)
 		client.subscriptions[ch.Name()] = ch
 		ch.mtx.Unlock()
 		if ch.IsPresence() && !hidden {
 			// Tell everyone that someone joined the channel.
-			ch.Broadcast(map[string]interface{}{"__memberJoined": data}, true)
+			ch.Broadcast(map[string]interface{}{":memberJoined": data}, true)
 		}
 	}
 }
@@ -164,7 +164,7 @@ func (ch *Channel) unsubscribe(client *WebsocketConnection, data map[string]inte
 		// Confirm unsubscription.
 		if confirm {
 			client.Send(map[string]interface{}{
-				"__unsubscribed": map[string]interface{}{
+				":unsubscribed": map[string]interface{}{
 					"channel": ch.name,
 				},
 			})
@@ -180,7 +180,7 @@ func (ch *Channel) unsubscribe(client *WebsocketConnection, data map[string]inte
 			}
 			data["sid"] = sid
 			data["channel"] = ch.name
-			ch.Broadcast(map[string]interface{}{"__memberLeft": data}, true)
+			ch.Broadcast(map[string]interface{}{":memberLeft": data}, true)
 		}
 	}
 }
