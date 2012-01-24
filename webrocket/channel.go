@@ -113,17 +113,20 @@ func (ch *Channel) subscribe(client *WebsocketConnection, hidden bool, data map[
 	if client != nil && ch.IsAlive() {
 		ch.mtx.Lock()
 		sid := client.Id()
-		if _, ok := ch.subscribers[sid]; ok {
+		s, ok := ch.subscribers[sid]
+		if ok {
 			// Already subscribing this channel...
 			ch.mtx.Unlock()
 			return
+		} else {
+			s = newSubscription(client, hidden, data)
 		}
-		data["sid"] = sid
 		data["channel"] = ch.name
 		var subscribers []interface{}
 		if ch.IsPresence() {
-			i := 0
+			data["uid"] = s.Uid()
 			subscribers = make([]interface{}, len(ch.subscribers))
+			i := 0
 			for _, s := range ch.subscribers {
 				subscribers[i] = s.Data()
 				i += 1
@@ -134,8 +137,11 @@ func (ch *Channel) subscribe(client *WebsocketConnection, hidden bool, data map[
 		if ch.IsPresence() {
 			sdata["subscribers"] = subscribers
 		}
+		if ch.IsPrivate() {
+			sdata["uid"] = s.Uid()
+		}
 		client.Send(map[string]interface{}{":subscribed": sdata})
-		ch.subscribers[sid] = newSubscription(client, hidden, data)
+		ch.subscribers[sid] = s
 		client.subscriptions[ch.Name()] = ch
 		ch.mtx.Unlock()
 		if ch.IsPresence() && !hidden {
@@ -172,15 +178,18 @@ func (ch *Channel) unsubscribe(client *WebsocketConnection, data map[string]inte
 		delete(ch.subscribers, sid)
 		delete(client.subscriptions, ch.Name())
 		ch.mtx.Unlock()
+		if ch.IsPrivate() {
+			data["uid"] = s.Uid()
+		}
 		if ch.IsPresence() && !s.IsHidden() {
 			// Tell the others that this guy is not subscribing the
 			// channel anymore.
-			for k, v := range s.Data() {
-				data[k] = v
+			merged := s.Data()
+			for k, v := range data {
+				merged[k] = v
 			}
-			data["sid"] = sid
 			data["channel"] = ch.name
-			ch.Broadcast(map[string]interface{}{":memberLeft": data}, true)
+			ch.Broadcast(map[string]interface{}{":memberLeft": merged}, true)
 		}
 	}
 }

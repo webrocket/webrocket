@@ -26,6 +26,8 @@ import (
 // Permission is represents single access token and permission pattern
 // assigned to it. 
 type Permission struct {
+	// The user's id to which this permission can be assigned.
+	uid string
 	// Permission regexp.
 	pattern *regexp.Regexp
 	// Generated unique single access token.
@@ -37,16 +39,21 @@ type Permission struct {
 
 // Creates new permission for specified pattern.
 //
+// uid     - An ID of the permission assignee.
 // pattern - The regexp string to be used to match against the channels.
 //
 // Returns new permission or error if something went wrong.
-func NewPermission(pattern string) (p *Permission, err error) {
+func NewPermission(uid string, pattern string) (p *Permission, err error) {
 	re, err := regexp.Compile(fmt.Sprintf("^(%s)$", pattern))
 	if err != nil {
 		err = errors.New("invalid permission regexp")
 		return
 	}
-	p = &Permission{re, generateSingleAccessToken()}
+	if len(uid) == 0 {
+		err = errors.New("invalud user id")
+		return
+	}
+	p = &Permission{uid, re, generateSingleAccessToken()}
 	return
 }
 
@@ -61,11 +68,10 @@ func NewPermission(pattern string) (p *Permission, err error) {
 //
 // Examples:
 //
-//    p := NewPermission("(foo|bar)")
+//    p := NewPermission("joe", "(foo|bar)")
 //    p.IsMatching("foo")
 //    // => true
 //    p.IsMatching("hello")
-//    // => false
 //
 // Returns whether you have permission to operate on the channel or not.
 func (p *Permission) IsMatching(channel string) bool {
@@ -75,6 +81,11 @@ func (p *Permission) IsMatching(channel string) bool {
 // Token returns single access token generate for this permission.
 func (p *Permission) Token() string {
 	return p.token
+}
+
+// Uid returns user defined identifier.
+func (p *Permission) Uid() string {
+	return p.uid
 }
 
 // Internal

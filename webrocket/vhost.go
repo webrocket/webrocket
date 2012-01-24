@@ -117,16 +117,17 @@ func (v *Vhost) AccessToken() string {
 // specified permissions. Threadsafe, called from various connection's
 // handlers.
 //
+// uid     - An ID of the permission assignee.
 // pattern - The permission regexp to be attached to the token.
 //
 // Examples
 //
-//     token := v.GenerateSingleAccessToken("(foo|bar)")
+//     token := v.GenerateSingleAccessToken("joe", "(foo|bar)")
 //     println(token)
 //     // => "f74fda...f54abd3"
 //
-func (v *Vhost) GenerateSingleAccessToken(pattern string) (token string) {
-	if p, err := NewPermission(pattern); err == nil {
+func (v *Vhost) GenerateSingleAccessToken(uid, pattern string) (token string) {
+	if p, err := NewPermission(uid, pattern); err == nil {
 		token = p.Token()
 		v.tmtx.Lock()
 		defer v.tmtx.Unlock()

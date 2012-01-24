@@ -372,16 +372,17 @@ func (b *BackendEndpoint) handleReqSingleAccessTokenRequest(vhost *Vhost,
 	// <<<
 	// permission regexp\n
 	// >>>
-	var pattern, token string
+	var uid, pattern, token string
 
-	if req.Len() < 1 {
+	if req.Len() < 2 {
 		return "Bad request", 400
 	}
-	if pattern = string(req.Message[0]); pattern == "" {
+	uid, pattern = string(req.Message[0]), string(req.Message[1])
+	if pattern == "" || uid == "" {
 		// No permission regexp specified.
 		return "Bad request", 400
 	}
-	if token = vhost.GenerateSingleAccessToken(pattern); token == "" {
+	if token = vhost.GenerateSingleAccessToken(uid, pattern); token == "" {
 		// Couldn't generate an access token.
 		return "Internal error", 597
 	}

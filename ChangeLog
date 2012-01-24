@@ -1,3 +1,15 @@
+2012-01-24  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* webrocket/backend_endpoint.go: fixed calls to GenerateSingleAccessToken
+	* webrocket/channel.go: respecting uid in confirmations
+	* webrocket/permission.go: added uid assigned to permission
+	* webrocket/permission_test.go: fixed tests including uid
+	* webrocket/subscription.go: added uid of subscribing client
+	* webrocket/vhost.go: adjusted calls to NewPermission
+	* webrocket/vhost_test.go: fixed tests
+	* webrocket/webrocket_integration_test.go: added checking for uid in confirmations
+	* webrocket/websocket_connection.go: fixed calls
+
 2012-01-22  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* webrocket-server/main.go: locking and storage fixes

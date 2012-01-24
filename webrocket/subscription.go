@@ -19,6 +19,8 @@ package webrocket
 type Subscription struct {
 	// The subscriber's connection.
 	client *WebsocketConnection
+	// The user ID.
+	uid string
 	// Whether this subscriber is hidden or not.
 	hidden bool
 	// Data attached to this subscription (used only by the presence channels).
@@ -32,7 +34,7 @@ type Subscription struct {
 // If hidden option is true, then this subscription will be invisible for
 // the other subscribers of the presence channel.
 func newSubscription(c *WebsocketConnection, hidden bool, data map[string]interface{}) *Subscription {
-	return &Subscription{c, hidden, data}
+	return &Subscription{c, c.Uid(), hidden, data}
 }
 
 // Exported
@@ -59,4 +61,9 @@ func (s *Subscription) Id() (id string) {
 		id = s.Id()
 	}
 	return
+}
+
+// Uid returns an unique id of the subscriber.
+func (s *Subscription) Uid() string {
+	return s.uid
 }

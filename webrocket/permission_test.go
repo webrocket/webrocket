@@ -18,26 +18,26 @@ package webrocket
 import "testing"
 
 func TestNewPermission(t *testing.T) {
-	p, err := NewPermission(".*")
+	p, err := NewPermission("joe", ".*")
 	if err != nil {
 		t.Errorf("Expected to create a new permission, error: %v", err)
 	}
 	if len(p.Token()) != 128 {
 		t.Errorf("Expected to generate single access token for the permission")
 	}
-	_, err = NewPermission("%%&**")
+	_, err = NewPermission("joe", "%%&**")
 	if err == nil {
 		t.Errorf("Expected an error when creating new permission with invalid regexp")
 	}
 }
 
 func TestPermissionIsMatching(t *testing.T) {
-	p, _ := NewPermission(".*foo|bar.*")
+	p, _ := NewPermission("joe", ".*foo|bar.*")
 	for _, ch := range []string{"lefoo", "barle"} {
 		if !p.IsMatching(ch) {
 			t.Errorf("Expected permission to match the '%s' channel", ch)
 		}
-	}
+ 	}
 	for _, ch := range []string{"lefoobar", "lebar"} {
 		if p.IsMatching(ch) {
 			t.Errorf("Expected permission to not match the '%s' channel", ch)

@@ -45,7 +45,7 @@ func TestNewVhostWithInvalidPath(t *testing.T) {
 
 func TestVhostGenerateSingleAccessToken(t *testing.T) {
 	v, _ := newTestVhost()
-	v.GenerateSingleAccessToken(".*")
+	v.GenerateSingleAccessToken("joe", ".*")
 	if len(v.permissions) != 1 {
 		t.Errorf("Expected to generate single access token")
 	}
@@ -53,7 +53,7 @@ func TestVhostGenerateSingleAccessToken(t *testing.T) {
 
 func TestVhostValidateSingleAccessToken(t *testing.T) {
 	v, _ := newTestVhost()
-	token := v.GenerateSingleAccessToken(".*")
+	token := v.GenerateSingleAccessToken("joe", ".*")
 	pv, ok := v.ValidateSingleAccessToken(token)
 	if !ok || pv.Token() != token {
 		t.Errorf("Expected successfull validation of existing access token")

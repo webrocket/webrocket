@@ -195,9 +195,9 @@ func testWebsocketAuthenticationWithInvalidToken(t *testing.T,
 }
 
 func testWebsocketAuthenticationWithValidToken(t *testing.T,
-	ws *websocket.Conn) {
+	ws *websocket.Conn, uid string) {
 	v, _ := ctx.Vhost("/test")
-	token := v.GenerateSingleAccessToken(".*")
+	token := v.GenerateSingleAccessToken(uid, ".*")
 	websocketSend(t, ws, map[string]interface{}{
 		"auth": map[string]interface{}{
 			"token": token,
@@ -286,6 +286,7 @@ func testWebsocketSubscribeToPrivateChannelWithAuthentication(t *testing.T,
 	})
 	websocketExpectResponse(t, ws, ":subscribed", map[string]*regexp.Regexp{
 		"channel": regexp.MustCompile("^private-test$"),
+		"uid":     regexp.MustCompile("^joe$"),
 	})
 }
 
@@ -298,6 +299,7 @@ func testWebsocketSubscribeToPresenceChannelWithAuthentication(t *testing.T,
 	})
 	websocketExpectResponse(t, ws, ":subscribed", map[string]*regexp.Regexp{
 		"channel": regexp.MustCompile("^presence-test$"),
+		"uid":     regexp.MustCompile("^joe$"),
 	})
 	websocketExpectResponse(t, ws, ":memberJoined", nil)
 }
@@ -421,7 +423,6 @@ func testWebsocketBroadcast(t *testing.T, wss []*websocket.Conn) {
 	})
 	for _, ws := range wss {
 		websocketExpectResponse(t, ws, "hello", map[string]*regexp.Regexp{
-			"sid":     regexp.MustCompile("^.{36}$"),
 			"channel": regexp.MustCompile("^test$"),
 			"foo":     regexp.MustCompile("^bar$"),
 		})
@@ -448,7 +449,7 @@ func testWebsocketPresenceChannelSubscribeBehaviour(t *testing.T,
 		for j := range wss[:i+1] {
 			websocketExpectResponse(t, wss[j], ":memberJoined",
 				map[string]*regexp.Regexp{
-					"sid":     regexp.MustCompile("^.{36}"),
+					"uid":     regexp.MustCompile("^joe\\d+"),
 					"channel": regexp.MustCompile("^presence-test$"),
 					"foo":     regexp.MustCompile("^bar$"),
 				})
@@ -472,7 +473,7 @@ func testWebsocketPresenceChannelUnsubscribeBehaviour(t *testing.T,
 		for j := range wss[i+1:] {
 			websocketExpectResponse(t, wss[j+i+1], ":memberLeft",
 				map[string]*regexp.Regexp{
-					"sid":     regexp.MustCompile("^.{36}"),
+					"uid":     regexp.MustCompile("^joe\\d+"),
 					"channel": regexp.MustCompile("^presence-test$"),
 					"bar":     regexp.MustCompile("^foo$"),
 				})
@@ -542,14 +543,14 @@ func testBackendRequestSingleAccessTokenWithoutPermission(t *testing.T,
 func testBackendRequestSingleAccessTokenWithInvalidPermission(t *testing.T,
 	c net.Conn) {
 	c = backendDial(t)
-	backendSend(t, c, backendIdty(), "", "AT", "..*{34}")
+	backendSend(t, c, backendIdty(), "", "AT", "joe", "..*{34}")
 	backendExpectError(t, c, 597)
 }
 
 func testBackendRequestSingleAccessTokenWithValidPermission(t *testing.T,
 	c net.Conn) {
 	c = backendDial(t)
-	backendSend(t, c, backendIdty(), "", "AT", "(foo|bar)")
+	backendSend(t, c, backendIdty(), "", "AT", "joe", "(foo|bar)")
 	<-time.After(1e6)
 	var token string
 	for t := range v.permissions {
@@ -609,7 +610,7 @@ func TestAllTheThings(t *testing.T) {
 	testWebsocketAuthenticationWithoutToken(t, ws)
 	testWebsocketAuthenticationWithInvalidTokenFormat(t, ws)
 	testWebsocketAuthenticationWithInvalidToken(t, ws)
-	testWebsocketAuthenticationWithValidToken(t, ws)
+	testWebsocketAuthenticationWithValidToken(t, ws, "joe")
 	testWebsocketSubscribeWithoutChannelName(t, ws)
 	testWebsocketSubscribeWithEmptyChannelName(t, ws)
 	testWebsocketSubscribeWithInvalidChannelName(t, ws)
@@ -626,7 +627,7 @@ func TestAllTheThings(t *testing.T) {
 	testWebsocketUnsubscribeSubscribedChannel(t, ws)
 	testWebsocketSubscribeToPrivateChannelWithoutAuthentication(t, ws)
 	testWebsocketSubscribeToPresenceChannelWithoutAuthentication(t, ws)
-	testWebsocketAuthenticationWithValidToken(t, ws)
+	testWebsocketAuthenticationWithValidToken(t, ws, "joe")
 	testWebsocketSubscribeToPrivateChannelWithAuthentication(t, ws)
 	testWebsocketSubscribeToPresenceChannelWithAuthentication(t, ws)
 	ws.Close()
@@ -634,7 +635,7 @@ func TestAllTheThings(t *testing.T) {
 	for i := range wss {
 		wss[i] = websocketDial(t)
 		testWebsocketConnect(t, wss[i])
-		testWebsocketAuthenticationWithValidToken(t, wss[i])
+		testWebsocketAuthenticationWithValidToken(t, wss[i], fmt.Sprintf("joe%d", i))
 	}
 	testWebsocketPresenceChannelSubscribeBehaviour(t, wss[:])
 	testWebsocketPresenceChannelUnsubscribeBehaviour(t, wss[:])

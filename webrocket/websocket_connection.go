@@ -107,6 +107,14 @@ func (c *WebsocketConnection) Id() string {
 	return c.id
 }
 
+// Uid returns user-defined identifier of this connection.
+func (c *WebsocketConnection) Uid() string {
+	if c.IsAuthenticated() {
+		return c.permission.Uid()
+	}
+	return ""
+}
+
 // IsAuthenticated returns whether this connection is authenticated or not.
 // Not threadsafe, Used only from within websocket protocol's handlers which
 // is blocking for specified connection.
