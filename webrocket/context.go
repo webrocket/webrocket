@@ -180,33 +180,12 @@ func (ctx *Context) StorageDir() string {
 // storage directory shall be set only once from the main goroutine.
 //
 // Returns an error if something went wrong.
-func (ctx *Context) Load()  (err error) {
+func (ctx *Context) Load() (err error) {
 	if ctx.storage, err = newStorage(ctx.storageDir, ctx.nodeName); err != nil {
 		return
 	}
-	// Loading the list persisted vhosts. 
-	vhosts, err := ctx.storage.Vhosts()
-	if err != nil {
-		return err
-	}
-	for _, vstat := range vhosts {
-		vhost, err := ctx.AddVhost(vstat.Name)
-		if err != nil {
-			return err
-		}
-		vhost.accessToken = vstat.AccessToken
-		// Loading all the channels registered within this vhost.
-		channels, err := ctx.storage.Channels(vstat.Name)
-		if err != nil {
-			return err
-		}
-		for _, chstat := range channels {
-			_, err := vhost.OpenChannel(chstat.Name, chstat.Kind)
-			if err != nil {
-				return err
-			}
-		}
-	}
+	// Reading all the data from the storage. 
+	ctx.storage.Load(ctx)
 	// Everything's fine, enabling the access to the storage.
 	ctx.storageOn = true
 	return
@@ -277,8 +256,11 @@ func (ctx *Context) AddVhost(path string) (v *Vhost, err error) {
 	if v, err = newVhost(ctx, path); err != nil {
 		return
 	}
-	// XXX: GenerateAccessToken internally adds this vhost to the storage,
-	// so we don't need to save it manually here.
+	if ctx.isStorageEnabled() {
+		if err = ctx.storage.AddVhost(v); err != nil {
+			return
+		}
+	}
 	v.GenerateAccessToken()
 	ctx.vhosts[path] = v
 	// Registering the vhost under the websocket and backend endpoints.
@@ -312,8 +294,7 @@ func (ctx *Context) DeleteVhost(path string) (err error) {
 		ctx.backend.unregisterVhost(vhost)
 	}
 	if ctx.isStorageEnabled() {
-		// Remove the vhost entry from the storage.
-		if err = ctx.storage.DeleteVhost(path); err != nil {
+		if err = ctx.storage.DeleteVhost(vhost); err != nil {
 			return
 		}
 	}

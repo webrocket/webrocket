@@ -31,6 +31,8 @@ var validVhostNamePattern = regexp.MustCompile("^/[\\w\\d\\-\\_]+(/[\\w\\d\\-\\_
 // server which contains it's own users with permissions, channels,
 // and other related settings.
 type Vhost struct {
+	// ID of the persisted record.
+	_id int
 	// A vhost's path.
 	path string
 	// A vhost's access token. 
@@ -99,8 +101,7 @@ func (v *Vhost) GenerateAccessToken() string {
 	hash.Write(buf[:])
 	v.accessToken = fmt.Sprintf("%x", hash.Sum([]byte{}))
 	if v.ctx != nil && v.ctx.isStorageEnabled() {
-		// Write generated access token to the storage.
-		v.ctx.storage.AddVhost(v.path, v.accessToken)
+		v.ctx.storage.UpdateVhost(v)
 	}
 	return v.accessToken
 }
@@ -131,6 +132,9 @@ func (v *Vhost) GenerateSingleAccessToken(uid, pattern string) (token string) {
 		token = p.Token()
 		v.tmtx.Lock()
 		defer v.tmtx.Unlock()
+		if v.ctx != nil && v.ctx.isStorageEnabled() {
+			v.ctx.storage.AddPermission(v, p)
+		}
 		v.permissions[token] = p
 		return
 	}
@@ -148,6 +152,9 @@ func (v *Vhost) ValidateSingleAccessToken(token string) (p *Permission, ok bool)
 	v.tmtx.Lock()
 	defer v.tmtx.Unlock()
 	if p, ok = v.permissions[token]; ok {
+		if v.ctx != nil && v.ctx.isStorageEnabled() {
+			v.ctx.storage.DeletePermission(p)
+		}
 		delete(v.permissions, token)
 	}
 	return
@@ -183,8 +190,7 @@ func (v *Vhost) OpenChannel(name string, kind ChannelType) (ch *Channel, err err
 		return
 	}
 	if v.ctx != nil && v.ctx.isStorageEnabled() {
-		// Write the channel info to the storage.
-		if err = v.ctx.storage.AddChannel(v.path, name, kind); err != nil {
+		if err = v.ctx.storage.AddChannel(v, ch); err != nil {
 			return
 		}
 	}
@@ -206,8 +212,7 @@ func (v *Vhost) DeleteChannel(name string) (ok bool) {
 		return
 	}
 	if v.ctx != nil && v.ctx.isStorageEnabled() {
-		// Remove the channel from the storage.
-		if err := v.ctx.storage.DeleteChannel(v.path, name); err != nil {
+		if err := v.ctx.storage.DeleteChannel(ch); err != nil {
 			return
 		}
 	}

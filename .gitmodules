@@ -4,3 +4,6 @@
 [submodule "deps/gostepper"]
 	path = deps/gostepper
 	url = http://github.com/nu7hatch/gostepper.git
+[submodule "deps/persival"]
+	path = deps/persival
+	url = git://github.com/nu7hatch/persival

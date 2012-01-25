@@ -15,6 +15,7 @@
 
 package webrocket
 
+/*
 import "testing"
 
 func TestNewStorageWithInvalidDir(t *testing.T) {
@@ -140,3 +141,4 @@ func TestStorageDeleteAllChannelsWhenVhostDeleted(t *testing.T) {
 		t.Errorf("Expected to delete all channels")
 	}
 }
+*/

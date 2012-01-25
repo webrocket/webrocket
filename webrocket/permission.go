@@ -26,6 +26,8 @@ import (
 // Permission is represents single access token and permission pattern
 // assigned to it. 
 type Permission struct {
+	// ID of the persisted record.
+	_id int
 	// The user's id to which this permission can be assigned.
 	uid string
 	// Permission regexp.
@@ -53,7 +55,7 @@ func NewPermission(uid string, pattern string) (p *Permission, err error) {
 		err = errors.New("invalud user id")
 		return
 	}
-	p = &Permission{uid, re, generateSingleAccessToken()}
+	p = &Permission{0, uid, re, generateSingleAccessToken()}
 	return
 }
 

@@ -16,11 +16,10 @@
 package webrocket
 
 import (
-	kc "../gocabinet"
+	"../persival"
 	"os"
 	"path"
-	"strconv"
-	"strings"
+	"regexp"
 )
 
 const (
@@ -32,30 +31,56 @@ const (
 	storageVhostKeyPrefix = "v"
 )
 
-// vhostStat is an internal struct to represent stored information about
+// _vhost is an internal struct to represent stored information about
 // the vhost.
-type vhostStat struct {
+type _vhost struct {
 	// The vhost's name.
-	Name string
+	Path string
 	// The vhost's access token.
 	AccessToken string
 }
 
-// channelStat is an internal struct to represent stored information about
+// _channel is an internal struct to represent stored information about
 // the channel.
-type channelStat struct {
+type _channel struct {
+	// ID of the vhost.
+	Vhost int
 	// The channel's name.
 	Name string
 	// The channel's type.
 	Kind ChannelType
 }
 
+// _permission is an internal struct to represent stored information about
+// the permission.
+type _permission struct {
+	// ID of the vhost.
+	Vhost int
+	// The permission's user id.
+	Uid string
+	// The permission's pattern.
+	Pattern *regexp.Regexp
+	// The permission's token.
+	Token string
+}
+
+// Initializer.
+func init() {
+	persival.Register(&_vhost{})
+	persival.Register(&_channel{})
+	persival.Register(&_permission{})
+}
+
 // storage implements an adapter for the persistence layer. At the moment
-// a Kyoto Cabinet database is used to provide data persistency. All storage's
+// a Persival database is used to provide data persistency. All storage's
 // functions are threadsafe.
 type storage struct {
-	// Kyoto Cabinet database object.
-	db *kc.KCDB
+	// The vhosts bucket.
+	vhosts *persival.Bucket
+	// The channels bucket.
+	channels *persival.Bucket
+	// The permissions bucket.
+	permissions *persival.Bucket
 	// Path to storage directory.
 	dir string
 }
@@ -72,170 +97,172 @@ type storage struct {
 // Returns configured storage or error if something went wrong
 func newStorage(dir string, name string) (s *storage, err error) {
 	if err = os.MkdirAll(dir, 0744); err != nil {
-		return
+		return nil, err
 	}
-	dbfile := path.Join(dir, "/"+name+".kch")
-	db := kc.New()
-	err = db.Open(dbfile, kc.KCOREADER|kc.KCOWRITER|kc.KCOCREATE)
+	s = &storage{dir: dir}
+	// Initialize all the buckets...
+	s.vhosts, err = persival.NewBucket(path.Join(dir, name+".vhosts.bkt"), 0)
 	if err != nil {
-		return
+		return nil, err
 	}
-	s = &storage{dir: dir, db: db}
-	return
-}
-
-// Internal
-// -----------------------------------------------------------------------------
-
-// compKey combines given parts into the storage entry key.
-//
-// parts - A list of the parts to combine.
-//
-// Examples
-//
-//     key = s.compKey("foo", "bar")
-//     println(string(key))
-//     // => "foo|bar"
-//
-// Returns a key combined from given parts.
-func (s *storage) compKey(parts ...string) []byte {
-	return []byte(strings.Join(parts, storageKeyDelim))
+	s.channels, err = persival.NewBucket(path.Join(dir, name+".channels.bkt"), 0)
+	if err != nil {
+		return nil, err
+	}
+	s.permissions, err = persival.NewBucket(path.Join(dir, name+".permissions.bkt"), 0)
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 // Exported
 // -----------------------------------------------------------------------------
 
-// Vhosts loads databse entries for all the registered vhosts.
+// Load reads all the webrocket data from the storage and configures given
+// context with loaded information.
 //
-// Returns list of the vhostStat entries or an error if something went wrong.
-func (s *storage) Vhosts() (vhosts []*vhostStat, err error) {
-	// find "v|*"
-	res, err := s.db.MatchPrefix(string(s.compKey(storageVhostKeyPrefix, "")), 1024)
-	if err != nil {
-		return nil, err
-	}
-	vhosts = make([]*vhostStat, len(res))
-	i := 0
-	for _, key := range res {
-		// get "v|{matching_name}"
-		val, err := s.db.Get(key)
-		if err != nil {
-			continue
+// ctx - The context to be configured.
+//
+func (s *storage) Load(ctx *Context) {
+	var vhosts = make(map[int]*Vhost)
+	for k, val := range s.vhosts.All() {
+		if v, ok := val.(*_vhost); ok {
+			if x, err := ctx.AddVhost(v.Path); err == nil {
+				x.accessToken = v.AccessToken
+				x._id = k
+				vhosts[k] = x
+			}
 		}
-		parts := strings.Split(string(val), ";")
-		if len(parts) != 2 {
-			continue
-		}
-		vhosts[i] = &vhostStat{Name: parts[0], AccessToken: parts[1]}
-		i += 1
 	}
-	return vhosts[:i], nil
+	for k, val := range s.channels.All() {
+		if ch, ok := val.(*_channel); ok {
+			if v, ok := vhosts[ch.Vhost]; ok {
+				x, _ := newChannel(ch.Name, ChannelType(ch.Kind))
+				x._id = k
+				v.channels[ch.Name] = x
+			} else {
+				s.channels.Delete(k)
+			}
+		}
+	}
+	for k, val := range s.permissions.All() {
+		if p, ok := val.(*_permission); ok {
+			if v, ok := vhosts[p.Vhost]; ok {
+				x := &Permission{k, p.Uid, p.Pattern, p.Token}
+				v.permissions[p.Token] = x
+			}
+		}
+	}
 }
 
 // AddVhost creates a databse entry for the specified vhost.
 //
-// vhost - The name of the vhost to be created.
-// token - The vhost's access token value.
+// vhost - The vhost to be added.
 //
 // Returns an error if something went wrong.
-func (s *storage) AddVhost(vhost, token string) error {
-	// set "v|vhost_name", "vhost_name;access_token"
-	return s.db.Set(s.compKey(storageVhostKeyPrefix, vhost), []byte(vhost+";"+token))
+func (s *storage) AddVhost(vhost *Vhost) (err error) {
+	vhost._id, err = s.vhosts.Set(&_vhost{vhost.path, vhost.accessToken})
+	return
+}
+
+// UpdateVhost changes information about the specified vhost.
+//
+// vhost - The vhost to be changed.
+//
+// Returns an error if something went wrong.
+func (s *storage) UpdateVhost(vhost *Vhost) (err error) {
+	err = s.vhosts.Update(vhost._id, &_vhost{vhost.path, vhost.accessToken})
+	return
 }
 
 // DeleteVhost removes a database entry for the specified vhost and removes
 // all its channels' entries as well.
 //
-// vhost - The name of the vhost to be deleted.
+// vhost - The vhost to be deleted.
 //
 // Returns an error if something went wrong.
-func (s *storage) DeleteVhost(vhost string) (err error) {
-	err = s.db.BeginTran(true)
-	if err == nil {
-		// del "v|vhost_name"
-		s.db.Remove(s.compKey(storageVhostKeyPrefix, vhost))
-		// find "ch|vhost_name|*"
-		channels, err := s.db.MatchPrefix(string(s.compKey(storageChanKeyPrefix, vhost, "")), 1024)
-		if err != nil {
-			channels = [][]byte{}
-		}
-		// del "ch|vhost_name|{matching_channel}"
-		for _, channel := range channels {
-			s.db.Remove(channel)
-		}
-		err = s.db.EndTran(true)
+func (s *storage) DeleteVhost(vhost *Vhost) (err error) {
+	// FIXME: This should have a transaction!
+	for _, channel := range vhost.Channels() {
+		s.channels.Delete(channel._id)
 	}
-	return err
-}
-
-// Channels loads entries for all the channels registered under the specified vhost.
-//
-// vhost - The name of the channels' parent vhost.
-//
-// Returns list of the channelStat entries oran error if something went wrong.
-func (s *storage) Channels(vhost string) (channels []*channelStat, err error) {
-	// find "ch|vhost_name|*"
-	res, err := s.db.MatchPrefix(string(s.compKey(storageChanKeyPrefix, vhost, "")), 1024)
-	if err != nil {
-		return nil, err
-	}
-	channels = make([]*channelStat, len(res))
-	i := 0
-	for _, key := range res {
-		val, err := s.db.Get(key)
-		if err != nil {
-			continue
-		}
-		parts := strings.Split(string(val), ";")
-		if len(parts) != 2 {
-			continue
-		}
-		channelType, _ := strconv.Atoi(string(parts[1]))
-		channels[i] = &channelStat{Name: parts[0], Kind: ChannelType(channelType)}
-		i += 1
-	}
-	return channels[:i], nil
+	err = s.vhosts.Delete(vhost._id)
+	return
 }
 
 // AddChannel create a databse entry for the specified channel.
 //
-// vhost   - The name of the channel's parent vhost.
-// channel - The name of the channel to be added.
-// kind    - A type of the channel.
+// vhost   - The channel's parent vhost.
+// channel - The channel to be added.
 //
 // Returns an error if something went wrong.
-func (s *storage) AddChannel(vhost, channel string, kind ChannelType) error {
-	// set "ch|vhost_name|channel_name", "channel_name"
-	kindVal := strconv.Itoa(int(kind))
-	return s.db.Set(s.compKey(storageChanKeyPrefix, vhost, channel), []byte(channel+";"+kindVal))
+func (s *storage) AddChannel(vhost *Vhost, channel *Channel) (err error) {
+	channel._id, err = s.channels.Set(&_channel{vhost._id, channel.name, channel.kind})
+	return
 }
 
 // DeleteChannel removes a given channel's entry from the database.
 //
-// vhost   - The name of the channel's parent vhost.
-// channel - The name of the channel to be deleted.
+// vhost   - The channel's parent vhost.
+// channel - The channel to be deleted.
 //
 // Returns an error if something went wrong.
-func (s *storage) DeleteChannel(vhost, channel string) error {
-	// del "ch|vhost_name/channel_name"
-	return s.db.Remove(s.compKey(storageChanKeyPrefix, vhost, channel))
+func (s *storage) DeleteChannel(channel *Channel) (err error) {
+	err = s.channels.Delete(channel._id)
+	return
+}
+
+
+// AddPermission create a databse entry for the specified permission.
+//
+// vhost      - The permission's parent vhost.
+// permission - The permission to be added.
+//
+// Returns an error if something went wrong.
+func (s *storage) AddPermission(vhost *Vhost, perm *Permission) (err error) {
+	perm._id, err = s.permissions.Set(&_permission{vhost._id, perm.uid, perm.pattern, perm.token})
+	return
+}
+
+// DeletePermission removes a given permission's entry from the database.
+//
+// vhost      - The permission's parent vhost.
+// permission - The permission to be deleted.
+//
+// Returns an error if something went wrong.
+func (s *storage) DeletePermission(permission *Permission) (err error) {
+	err = s.permissions.Delete(permission._id)
+	return
 }
 
 // Clear truncates all the data in the storage.
 //
 // Returns an error if something went wrong.
-func (s *storage) Clear() error {
-	return s.db.Clear()
+func (s *storage) Clear() (err error) {
+	if err = s.vhosts.Destroy(); err != nil {
+		return
+	}
+	if err = s.channels.Destroy(); err != nil {
+		return
+	}
+	if err = s.permissions.Destroy(); err != nil {
+		return
+	}
+	return nil
 }
 
 // Save writes down and synchronizes all the data.
 //
 // Returns an error if something went wrong.
 func (s *storage) Save() error {
-	return s.db.Sync(true)
+	// ... nothing to do after switching to Persival.
+	return nil
 }
 
 // Kill closes the storage.
 func (s *storage) Kill() {
-	s.db.Close()
+	s.vhosts.Close()
+	s.channels.Close()
+	s.permissions.Close()
 }

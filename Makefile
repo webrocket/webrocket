@@ -13,7 +13,7 @@ endif
 
 ASCIIDOC = asciidoc
 
-all: clean gouuid gocabinet gostepper server admin
+all: clean gouuid persival gostepper server admin
 	@rm -rf _build
 	@$(ECHO) "\033[35mgathering things together\033[0m"
 	mkdir -p $(BUILD_DIR)/bin $(BUILD_DIR)/share
@@ -24,7 +24,7 @@ all: clean gouuid gocabinet gostepper server admin
 clean: clean-lib clean-server clean-admin clean-deps
 	rm -rf build
 
-clean-deps: clean-gouuid clean-gocabinet clean-gostepper
+clean-deps: clean-gouuid clean-persival clean-gostepper
 install: install-server install-admin install-man
 check: all check-lib
 
@@ -70,12 +70,12 @@ gouuid:
 clean-gouuid:
 	$(MAKE) -C deps/gouuid clean
 
-gocabinet:
-	@$(ECHO) "\033[35mbuilding \033[1;32m./deps/gocabinet\033[0m"
-	@$(MAKE) -C deps/gocabinet
-	cp deps/gocabinet/_obj/github.com/nu7hatch/*.a .
-clean-gocabinet:
-	$(MAKE) -C deps/gocabinet clean
+persival:
+	@$(ECHO) "\033[35mbuilding \033[1;32m./deps/persival\033[0m"
+	@$(MAKE) -C deps/persival
+	cp deps/persival/_obj/github.com/nu7hatch/*.a .
+clean-persival:
+	$(MAKE) -C deps/persival clean
 
 gostepper:
 	@$(ECHO) "\033[35mbuilding \033[1;32m./deps/gostepper\033[0m"

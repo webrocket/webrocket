@@ -39,6 +39,8 @@ const (
 // Channel keeps information about specified channel and it's subscriptions.
 // It's hub is used to broadcast messages.
 type Channel struct {
+	// ID of the persisted record.
+	_id int
 	// The name of the channel.
 	name string
 	// A type of the channel.
@@ -75,7 +77,6 @@ func newChannel(name string, kind ChannelType) (ch *Channel, err error) {
 		subscribers: make(map[string]*Subscription),
 		alive:       true,
 	}
-	//go ch.broadcastLoop()
 	return
 }
 
