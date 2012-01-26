@@ -1,3 +1,11 @@
+2012-01-25  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* webrocket/storage.go: switched to persival, get rid of kyoto cabinet
+	* webrocket/vhost.go: storage adjustments
+	* webrocket/context.go: storage adjustments
+	* webrocket/channel.go: storage adjustments
+	* webrocket/permission.go: storage adjustments
+
 2012-01-24  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* webrocket/backend_endpoint.go: fixed calls to GenerateSingleAccessToken
