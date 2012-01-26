@@ -22,15 +22,6 @@ import (
 	"regexp"
 )
 
-const (
-	// Storage key parts delimiter.
-	storageKeyDelim = "|"
-	// Channel entries key prefix
-	storageChanKeyPrefix = "ch"
-	// Vhost entries key prefix
-	storageVhostKeyPrefix = "v"
-)
-
 // _vhost is an internal struct to represent stored information about
 // the vhost.
 type _vhost struct {
@@ -127,7 +118,7 @@ func newStorage(dir string, name string) (s *storage, err error) {
 func (s *storage) Load(ctx *Context) {
 	var vhosts = make(map[int]*Vhost)
 	for k, val := range s.vhosts.All() {
-		if v, ok := val.(*_vhost); ok {
+		if v, ok := val.(*_vhost); !ok {
 			if x, err := ctx.AddVhost(v.Path); err == nil {
 				x.accessToken = v.AccessToken
 				x._id = k
@@ -183,9 +174,11 @@ func (s *storage) UpdateVhost(vhost *Vhost) (err error) {
 //
 // Returns an error if something went wrong.
 func (s *storage) DeleteVhost(vhost *Vhost) (err error) {
-	// FIXME: This should have a transaction!
 	for _, channel := range vhost.Channels() {
 		s.channels.Delete(channel._id)
+	}
+	for _, permission := range vhost.Permissions() {
+		s.permissions.Delete(permission._id)
 	}
 	err = s.vhosts.Delete(vhost._id)
 	return

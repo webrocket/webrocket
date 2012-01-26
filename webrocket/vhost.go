@@ -160,6 +160,14 @@ func (v *Vhost) ValidateSingleAccessToken(token string) (p *Permission, ok bool)
 	return
 }
 
+// Permissions returns list of all permissions allocated by single access
+// token requests.
+func (v *Vhost) Permissions() map[string]*Permission {
+	v.tmtx.Lock()
+	defer v.tmtx.Unlock()
+	return v.permissions
+}
+
 // Path returns configured path of this vhost.
 func (v *Vhost) Path() string {
 	return v.path
