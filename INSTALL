@@ -32,25 +32,6 @@ When the build succeeds you need to add few environment variables to your
 If you have any other doubts or problems please follow the instructions
 in Go's documentation.
 
-Dependencies
-------------
-WebRocket depends on few external libraries which have to be installed
-in your system before you build it.
-
-kyoto-cabinet (>= 1.2)
-~~~~~~~~~~~~~~~~~~~~~~
-The Kyoto Cabinet hash table library. This library should be available
-in your package manager's repository in most operating systems.
-
-.Debian
-	$ TODO ...
-
-.Arch Linux
-	$ yaourt -S kyoto-cabinet // or install it manually from AUR
-
-.Brew
-	$ brew install kyoto-cabinet
-
 Development dependencies
 ------------------------
 If you want to work on WebRocket development, you need to install a
@@ -82,7 +63,7 @@ to building our WebRocket installation. Building WebRocket is very easy and
 shouldn't cause too many problems. After you clone the repository, just use
 the standard 'make' targets to build and install:
 
-	$ git clone git://github.com/nu7hatch/webrocket.git
+	$ git clone git://github.com/webrocket/webrocket.git
 	$ cd webrocket
 	$ git submodule init && git submodule update
 	$ gomake
