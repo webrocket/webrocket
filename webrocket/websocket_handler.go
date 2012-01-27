@@ -19,7 +19,7 @@ import (
 	"io"
 	"net/http"
 	"sync"
-	"websocket"
+	"code.google.com/p/go.net/websocket"
 )
 
 // websocketHandler is a wrapper for the standard `websocket.Handler`

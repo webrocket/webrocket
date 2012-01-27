@@ -19,7 +19,7 @@ import (
 	"../uuid"
 	"io"
 	"sync"
-	"websocket"
+	"code.google.com/p/go.net/websocket"
 )
 
 // WebsocketConnection represents a single WebSockets connection and

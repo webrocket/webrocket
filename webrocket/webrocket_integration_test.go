@@ -25,7 +25,7 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"websocket"
+	"code.google.com/p/go.net/websocket"
 )
 
 var (
