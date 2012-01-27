@@ -38,6 +38,10 @@
 	* INTRO: added information to be displayed when make command successfully finishes
 	* README: updates
 
+2012-01-27 Pablo Astigarraga <pote@tardis.com.uy>
+
+	* README: s/cuboxsa/cuboxlabs/
+
 2012-01-25  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* webrocket/storage.go: switched to persival, get rid of kyoto cabinet
