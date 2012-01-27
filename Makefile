@@ -42,6 +42,8 @@ clean-deps: clean-gouuid clean-persival clean-gostepper
 check: all check-pkg
 	@$(ECHO) "\n\033[32mALL THE TESTS PASSED!\033[0m"
 
+format: format-server format-admin format-pkg
+
 papers:
 	-$(ASCIIDOC) -d article -o INSTALL.html INSTALL
 	-$(ASCIIDOC) -d article -o NEWS.html NEWS
@@ -71,6 +73,8 @@ clean-pkg:
 	rm -f *.a
 check-pkg:
 	@$(MAKE) -C webrocket test
+format-pkg:
+	-@$(MAKE) -C webrocket format
 
 # ./webrocket-server
 server: pkg gostepper
@@ -80,6 +84,8 @@ clean-server:
 	@$(MAKE) -C webrocket-server clean
 install-server:
 	@$(MAKE) -C webrocket-server install
+format-server:
+	-@$(MAKE) -C webrocket-server format
 
 # ./webrocket-admin
 admin: pkg server gostepper
@@ -89,6 +95,8 @@ clean-admin:
 	@$(MAKE) -C webrocket-admin clean
 install-admin:
 	@$(MAKE) -C webrocket-admin install
+format-admin:
+	-@$(MAKE) -C webrocket-admin format
 
 # ./deps/gouuid
 gouuid:

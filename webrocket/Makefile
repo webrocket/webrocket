@@ -29,4 +29,4 @@ GOFILES = \
 include $(GOROOT)/src/Make.pkg
 
 format:
-	gofmt -s=true -w .
+	@gofmt -s=true -w .

@@ -210,7 +210,6 @@ func (s *storage) DeleteChannel(channel *Channel) (err error) {
 	return
 }
 
-
 // AddPermission create a databse entry for the specified permission.
 //
 // vhost      - The permission's parent vhost.

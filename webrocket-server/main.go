@@ -32,28 +32,28 @@ import (
 // Configuration variables.
 var (
 	// The backend endpoint bind address.
-	BackendAddr   string
+	BackendAddr string
 	// The websocket endpoint bind address.
 	WebsocketAddr string
 	// The admin endpoint bind address.
-	AdminAddr     string
+	AdminAddr string
 	// Custom node name.
-	NodeName      string
+	NodeName string
 	// A path to the websocket endpoint certificate file.
-	CertFile      string
+	CertFile string
 	// A path to the websocket endpoint key file.
-	KeyFile       string
+	KeyFile string
 	// A path to the The storage directory.
-	StorageDir    string
+	StorageDir string
 	// Shall server be daemonized?
-	Daemon        bool
+	Daemon bool
 )
 
 var (
 	// The WebRocket main context.
 	ctx *webrocket.Context
 	// A stepper instance.
-	s   stepper.Stepper
+	s stepper.Stepper
 )
 
 func init() {
@@ -162,24 +162,7 @@ func Daemonize() int {
 // spaceship drawing.
 func DisplayAsciiArt() {
 	fmt.Printf("\n")
-	fmt.Printf(
-		`            /\                                                                     ` + "\n" +
-		`      ,    /  \      o               .        ___---___                    .       ` + "\n" +
-		`          /    \            .              .--\        --.     .     .         .   ` + "\n" +
-		`         /______\                        ./.;_.\     __/~ \.                       ` + "\n" +
-		`   .    |        |                      /;  / '-'  __\    . \                      ` + "\n" +
-		`        |        |    .        .       / ,--'     / .   .;   \        |            ` + "\n" +
-		`        |________|                    | .|       /       __   |      -O-       .   ` + "\n" +
-		`        |________|                   |__/    __ |  . ;   \ | . |      |            ` + "\n" +
-		`       /|   ||   |\                  |      /  \\_    . ;| \___|                   ` + "\n" +
-		`      / |   ||   | \    .    o       |      \  .~\\___,--'     |           .       ` + "\n" +
-		`     /  |   ||   |  \                 |     | . ; ~~~~\_    __|                    ` + "\n" +
-		`    /___|:::||:::|___\   |             \    \   .  .  ; \  /_/   .                 ` + "\n" +
-		`        |::::::::|      -O-        .    \   /         . |  ~/                  .   ` + "\n" +
-		`         \::::::/         |    .          ~\ \   .      /  /~          o           ` + "\n" +
-		`   o      ||__||       .                   ~--___ ; ___--~                         ` + "\n" +
-		`            ||                        .          ---         .              .      ` + "\n" +
-		`            ''                                                                     ` + "\n")
+	fmt.Printf(AsciiRocket)
 	fmt.Printf("WebRocket v%s\n", webrocket.Version())
 	fmt.Printf("Copyright (C) 2011-2012 by Krzysztof Kowalik and folks at Cubox.\n")
 	fmt.Printf("Released under the AGPL. See http://webrocket.io/ for details.\n\n")
@@ -211,3 +194,22 @@ func main() {
 	DisplaySystemSettings()
 	SignalTrap()
 }
+
+const AsciiRocket = `` +
+	`            /\                                                                    \n` +
+	`      ,    /  \      o               .        ___---___                    .      \n` +
+	`          /    \            .              .--\        --.     .     .         .  \n` +
+	`         /______\                        ./.;_.\     __/~ \.                      \n` +
+	`   .    |        |                      /;  / '-'  __\    . \                     \n` +
+	`        |        |    .        .       / ,--'     / .   .;   \        |           \n` +
+	`        |________|                    | .|       /       __   |      -O-       .  \n` +
+	`        |________|                   |__/    __ |  . ;   \ | . |      |           \n` +
+	`       /|   ||   |\                  |      /  \\_    . ;| \___|                  \n` +
+	`      / |   ||   | \    .    o       |      \  .~\\___,--'     |           .      \n` +
+	`     /  |   ||   |  \                 |     | . ; ~~~~\_    __|                   \n` +
+	`    /___|:::||:::|___\   |             \    \   .  .  ; \  /_/   .                \n` +
+	`        |::::::::|      -O-        .    \   /         . |  ~/                  .  \n` +
+	`         \::::::/         |    .          ~\ \   .      /  /~          o          \n` +
+	`   o      ||__||       .                   ~--___ ; ___--~                        \n` +
+	`            ||                        .          ---         .              .     \n` +
+	`            ''                                                                    \n`

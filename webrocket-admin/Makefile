@@ -17,3 +17,6 @@ GOFILES = \
 	cmd_list_workers.go
 
 include $(GOROOT)/src/Make.cmd
+
+format:
+	@gofmt -s=true -w .

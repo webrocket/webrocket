@@ -24,8 +24,8 @@ import (
 	"log"
 	"os"
 	"path"
-	"sync"
 	"regexp"
+	"sync"
 )
 
 // The length of the cookie string.
@@ -209,7 +209,7 @@ func (ctx *Context) Lock() (err error) {
 		if err = p.Signal(os.UnixSignal(0)); err == nil {
 			return errors.New(
 				fmt.Sprintf("node '%s' is already running",
-				ctx.NodeName()))
+					ctx.NodeName()))
 		}
 	}
 lock:

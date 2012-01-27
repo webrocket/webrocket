@@ -5,3 +5,6 @@ GOFILES = \
 	main.go
 
 include $(GOROOT)/src/Make.cmd
+
+format:
+	@gofmt -s=true -w .

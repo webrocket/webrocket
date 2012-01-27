@@ -16,10 +16,10 @@
 package webrocket
 
 import (
+	"code.google.com/p/go.net/websocket"
 	"io"
 	"net/http"
 	"sync"
-	"code.google.com/p/go.net/websocket"
 )
 
 // websocketHandler is a wrapper for the standard `websocket.Handler`
@@ -392,7 +392,7 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 	var eventName string
 	var data map[string]interface{}
 	var err error
-	
+
 	if eventName, ok = msg.Get("event").(string); eventName == "" {
 		// Event name not found, invalid payload!
 		return "Bad request", 400
@@ -416,7 +416,7 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 	err = backend.Trigger(h.vhost, map[string]interface{}{eventName: data})
 	if err != nil {
 		return "Internal error", 597
-	} 
+	}
 	return "Triggered", 205
 }
 

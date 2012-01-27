@@ -16,8 +16,8 @@
 package main
 
 import (
-	"../webrocket"
 	stepper "../gostepper"
+	"../webrocket"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -42,7 +42,7 @@ func init() {
 		usage()
 		os.Exit(1)
 	}
-	
+
 	readCookie()
 }
 
@@ -68,7 +68,7 @@ func readCookie() {
 	if Cookie != "" {
 		return
 	}
-	cookiePath := "/var/lib/webrocket"+webrocket.DefaultNodeName()+".cookie"
+	cookiePath := "/var/lib/webrocket" + webrocket.DefaultNodeName() + ".cookie"
 	data, err := ioutil.ReadFile(cookiePath)
 	if err != nil {
 		// We not reporting this error here, server will claim

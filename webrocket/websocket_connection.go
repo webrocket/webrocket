@@ -17,9 +17,9 @@ package webrocket
 
 import (
 	"../uuid"
+	"code.google.com/p/go.net/websocket"
 	"io"
 	"sync"
-	"code.google.com/p/go.net/websocket"
 )
 
 // WebsocketConnection represents a single WebSockets connection and

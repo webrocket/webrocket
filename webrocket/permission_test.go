@@ -37,7 +37,7 @@ func TestPermissionIsMatching(t *testing.T) {
 		if !p.IsMatching(ch) {
 			t.Errorf("Expected permission to match the '%s' channel", ch)
 		}
- 	}
+	}
 	for _, ch := range []string{"lefoobar", "lebar"} {
 		if p.IsMatching(ch) {
 			t.Errorf("Expected permission to not match the '%s' channel", ch)

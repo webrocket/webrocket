@@ -17,8 +17,8 @@ package webrocket
 
 import (
 	"fmt"
-	"strings"
 	"os/exec"
+	"strings"
 )
 
 // The version information.

@@ -18,6 +18,7 @@ package webrocket
 import (
 	"../uuid"
 	"bufio"
+	"code.google.com/p/go.net/websocket"
 	"fmt"
 	"net"
 	"os"
@@ -25,7 +26,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"code.google.com/p/go.net/websocket"
 )
 
 var (
