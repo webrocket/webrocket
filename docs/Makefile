@@ -28,7 +28,7 @@ $(DOCS_MAN3_HTML): %.html : %.txt
 %.html: %.txt
 	$(ASCIIDOC) $(ASCIIDOC_OPTS) -o $@ $<
 
-clean-man: clean-man1 clean-man3
+clean-man: clean-man1 #clean-man3
 
 clean-man1:
 	rm -f $(DOCS_MAN1) $(DOCS_MAN1_HTML)

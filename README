@@ -47,6 +47,9 @@ explanation what you can find in there.
 
 'distros'::
 	Tools and files specific for various operating systems
+
+'scripts'::
+	Various script supporting the building and deployment process.
     
 'webrocket'::
 	WebRocket core library

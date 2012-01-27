@@ -2,6 +2,16 @@
 
 	* webrocket/storage.go: fixes in storage loading.
 	* webrocket-admin/main.go: cookie flag changed to raw text instead of cookie file path
+	* webrocket/websocket_*.go: changed references to websocket package
+	* webrocket/README: updates
+	* webrocket-admin/README: added readme file
+	* webrocket-server/README: updates
+	* scripts/msg.sh: dummy script for displaying nice messages from makefile
+	* Makefile: some styling changes, build dir changed from '_build' to 'build'
+	* docs/Makefile: fixes
+	* INSTALL: new installation steps accoring to Go weekly.2012-01-27 release
+	* INTRO: added information to be displayed when make command successfully finishes
+	* README: updates
 
 2012-01-25  Krzysztof Kowalik  <chris@nu7hat.ch>
 

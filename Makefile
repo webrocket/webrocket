@@ -1,8 +1,11 @@
-UNAME = $(shell uname -s)
-BUILD_DIR = $(shell pwd)/_build
+UNAME=$(shell uname -s)
+SOURCE_DIR=$(shell pwd)
+BUILD_DIR=$(SOURCE_DIR)/build
+SCRIPTS_DIR=$(SOURCE_DIR)/scripts
+EXTRA_DEPS=
 
 ifndef VERBOSE
-MAKEFLAGS += --no-print-directory
+MAKEFLAGS+=--no-print-directory
 endif
 
 ifeq ($(UNAME),Darwin)
@@ -11,81 +14,102 @@ else
 ECHO=echo -e
 endif
 
-ASCIIDOC = asciidoc
+# Build manual pages if WITH_MAN specified.
+ifeq ($(WITH_MAN),1)
+EXTRA_DEPS+=man
+endif
 
-all: clean gouuid persival gostepper server admin
+MSG=$(SCRIPTS_DIR)/msg.sh
+ASCIIDOC=asciidoc
+CAT=cat
+
+all: clean pkg server admin $(EXTRA_DEPS)
 	@rm -rf _build
-	@$(ECHO) "\033[35mgathering things together\033[0m"
-	mkdir -p $(BUILD_DIR)/bin $(BUILD_DIR)/share
+	@$(MSG) "gathering things together in *./build*"
+	mkdir -p $(BUILD_DIR)/bin
 	cp webrocket-admin/webrocket-admin $(BUILD_DIR)/bin
 	cp webrocket-server/webrocket-server $(BUILD_DIR)/bin
-	@$(ECHO) "\n\033[32mHurray! WebRocket has been built into \033[1;32m$(BUILD_DIR)\033[0m\n"
+	mkdir -p $(BUILD_DIR)/share/man/man1
+	cp docs/*.1 $(BUILD_DIR)/share/man/man1/ &>/dev/null || true
+	@$(ECHO) "\n\033[1;32mCONGRATULATIONS COMARADE!\033[0;32m\nWebRocket has been built into \033[1;32m$(BUILD_DIR)/\033[0m\n"
+	@$(CAT) $(SOURCE_DIR)/INTRO; $(ECHO) ""
 
-clean: clean-lib clean-server clean-admin clean-deps
+clean: clean-pkg clean-server clean-admin clean-deps clean-man
 	rm -rf build
 
 clean-deps: clean-gouuid clean-persival clean-gostepper
-install: install-server install-admin install-man
-check: all check-lib
 
-lib:
-	@export __webrocket_st=100
-	@$(ECHO) "\033[35mbuilding \033[1;32m./webrocket\033[0m"
-	@$(MAKE) -C webrocket
-	cp webrocket/_obj/*.a .
-clean-lib:
-	@$(MAKE) -C webrocket clean
-	rm -f *.a
-check-lib:
-	@$(MAKE) -C webrocket test
-
-server: lib
-	@$(ECHO) "\033[35mbuilding \033[1;32m./webrocket-server\033[0m"
-	@$(MAKE) -C webrocket-server
-clean-server:
-	@$(MAKE) -C webrocket-server clean
-install-server:
-	@$(MAKE) -C webrocket-server install
-
-admin: lib server
-	@$(ECHO) "\033[35mbuilding \033[1;32m./webrocket-admin\033[0m"
-	@$(MAKE) -C webrocket-admin
-clean-admin:
-	@$(MAKE) -C webrocket-admin clean
-install-admin:
-	@$(MAKE) -C webrocket-admin install
-
-man:
-	@$(ECHO) "\033[35mbuilding \033[1;32m./docs\033[0m"
-	-@$(MAKE) -C docs
-clean-man:
-	-@$(MAKE) -C docs clean
-install-man:
-	-@$(MAKE) -C docs install
-
-gouuid:
-	@$(ECHO) "\033[35mbuilding \033[1;32m./deps/gouuid\033[0m"
-	@$(MAKE) -C deps/gouuid
-	cp deps/gouuid/_obj/github.com/nu7hatch/*.a .
-clean-gouuid:
-	$(MAKE) -C deps/gouuid clean
-
-persival:
-	@$(ECHO) "\033[35mbuilding \033[1;32m./deps/persival\033[0m"
-	@$(MAKE) -C deps/persival
-	cp deps/persival/_obj/github.com/nu7hatch/*.a .
-clean-persival:
-	$(MAKE) -C deps/persival clean
-
-gostepper:
-	@$(ECHO) "\033[35mbuilding \033[1;32m./deps/gostepper\033[0m"
-	@$(MAKE) -C deps/gostepper
-	cp deps/gostepper/_obj/github.com/nu7hatch/*.a .
-clean-gostepper:
-	$(MAKE) -C deps/gostepper clean
+check: all check-pkg
+	@$(ECHO) "\n\033[32mALL THE TESTS PASSED!\033[0m"
 
 papers:
 	-$(ASCIIDOC) -d article -o INSTALL.html INSTALL
 	-$(ASCIIDOC) -d article -o NEWS.html NEWS
 	-$(ASCIIDOC) -d article -o CONTRIBUTE.html CONTRIBUTE
 	-$(ASCIIDOC) -d article -o README.html README
+
+install:
+	@$(ECHO) Not implemented!
+
+# ./docs
+man:
+	@$(MSG) "cd *./docs*"
+	-@$(MAKE) -C docs
+clean-man:
+	-@$(MAKE) -C docs clean
+install-man:
+	-@$(MAKE) -C docs install
+
+# ./webrocket
+pkg: gouuid persival
+	@export __webrocket_st=100
+	@$(MSG) "cd *./webrocket*"
+	@$(MAKE) -C webrocket
+	cp webrocket/_obj/*.a .
+clean-pkg:
+	@$(MAKE) -C webrocket clean
+	rm -f *.a
+check-pkg:
+	@$(MAKE) -C webrocket test
+
+# ./webrocket-server
+server: pkg gostepper
+	@$(MSG) "cd *./webrocket-server*"
+	@$(MAKE) -C webrocket-server
+clean-server:
+	@$(MAKE) -C webrocket-server clean
+install-server:
+	@$(MAKE) -C webrocket-server install
+
+# ./webrocket-admin
+admin: pkg server gostepper
+	@$(MSG) "cd *./webrocket-admin*"
+	@$(MAKE) -C webrocket-admin
+clean-admin:
+	@$(MAKE) -C webrocket-admin clean
+install-admin:
+	@$(MAKE) -C webrocket-admin install
+
+# ./deps/gouuid
+gouuid:
+	@$(MSG) "cd *./deps/gouuid*"
+	@$(MAKE) -C deps/gouuid
+	cp deps/gouuid/_obj/github.com/nu7hatch/*.a .
+clean-gouuid:
+	$(MAKE) -C deps/gouuid clean
+
+# ./deps/persival
+persival:
+	@$(MSG) "cd *./deps/persival*"
+	@$(MAKE) -C deps/persival
+	cp deps/persival/_obj/github.com/nu7hatch/*.a .
+clean-persival:
+	$(MAKE) -C deps/persival clean
+
+# ./deps/gostepper
+gostepper:
+	@$(MSG) "cd *./deps/gostepper*"
+	@$(MAKE) -C deps/gostepper
+	cp deps/gostepper/_obj/github.com/nu7hatch/*.a .
+clean-gostepper:
+	$(MAKE) -C deps/gostepper clean
