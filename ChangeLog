@@ -1,3 +1,7 @@
+2012-01-27  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* webrocket/storage.go: fixes in storage loading.
+
 2012-01-25  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* webrocket/storage.go: switched to persival, get rid of kyoto cabinet

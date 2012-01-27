@@ -55,6 +55,10 @@ type _permission struct {
 	Token string
 }
 
+type dum struct {
+	V interface{}
+}
+
 // Initializer.
 func init() {
 	persival.Register(&_vhost{})
@@ -118,7 +122,7 @@ func newStorage(dir string, name string) (s *storage, err error) {
 func (s *storage) Load(ctx *Context) {
 	var vhosts = make(map[int]*Vhost)
 	for k, val := range s.vhosts.All() {
-		if v, ok := val.(*_vhost); !ok {
+		if v, ok := val.(*_vhost); ok {
 			if x, err := ctx.AddVhost(v.Path); err == nil {
 				x.accessToken = v.AccessToken
 				x._id = k
