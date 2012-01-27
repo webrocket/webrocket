@@ -5,6 +5,7 @@
 	* webrocket/websocket_*.go: changed references to websocket package
 	* webrocket/README: updates
 	* webrocket-admin/README: added readme file
+	* webrocket-admin/main.go: added documentation
 	* webrocket-server/README: updates
 	* scripts/msg.sh: dummy script for displaying nice messages from makefile
 	* Makefile: some styling changes, build dir changed from '_build' to 'build'

@@ -31,18 +31,28 @@ import (
 
 // Configuration variables.
 var (
+	// The backend endpoint bind address.
 	BackendAddr   string
+	// The websocket endpoint bind address.
 	WebsocketAddr string
+	// The admin endpoint bind address.
 	AdminAddr     string
+	// Custom node name.
 	NodeName      string
+	// A path to the websocket endpoint certificate file.
 	CertFile      string
+	// A path to the websocket endpoint key file.
 	KeyFile       string
+	// A path to the The storage directory.
 	StorageDir    string
+	// Shall server be daemonized?
 	Daemon        bool
 )
 
 var (
+	// The WebRocket main context.
 	ctx *webrocket.Context
+	// A stepper instance.
 	s   stepper.Stepper
 )
 
@@ -60,6 +70,8 @@ func init() {
 	StorageDir, _ = filepath.Abs(StorageDir)
 }
 
+// SetupContext initializes global WebRocket context, loads configuration
+// and all the vhosts data, and generates thean access cookie if its necessary.
 func SetupContext() {
 	s.Start("Initializing context")
 	ctx = webrocket.NewContext()
@@ -89,6 +101,11 @@ func SetupContext() {
 	s.Ok()
 }
 
+// SetupEndpoint is a helper to configure and run a WebRocket endpoint.
+//
+// kind - The name of the endpoint.
+// e    - The enpoint to be started.
+//
 func SetupEndpoint(kind string, e webrocket.Endpoint) {
 	go func() {
 		var err error
@@ -108,6 +125,8 @@ func SetupEndpoint(kind string, e webrocket.Endpoint) {
 	s.Ok()
 }
 
+// SignalTrap configures a handlers for various system signals, i.a.
+// it stops the context and cleans everything up when the app is interrupted.
 func SignalTrap() {
 	for sig := range signal.Incoming {
 		if usig, ok := sig.(os.UnixSignal); ok {
@@ -132,11 +151,15 @@ func SignalTrap() {
 	}
 }
 
+// Daeminize forks the application into a background process and exits
+// from the main one.
 func Daemonize() int {
 	// TODO: ...
 	return 0
 }
 
+// DisplayAsciiArt as you can see it displays this amazing ASCII art
+// spaceship drawing.
 func DisplayAsciiArt() {
 	fmt.Printf("\n")
 	fmt.Printf(
@@ -159,9 +182,11 @@ func DisplayAsciiArt() {
 		`            ''                                                                     ` + "\n")
 	fmt.Printf("WebRocket v%s\n", webrocket.Version())
 	fmt.Printf("Copyright (C) 2011-2012 by Krzysztof Kowalik and folks at Cubox.\n")
-	fmt.Printf("Released under the AGPL. See http://www.webrocket.io/ for details.\n\n")
+	fmt.Printf("Released under the AGPL. See http://webrocket.io/ for details.\n\n")
 }
 
+// DisplaySystemSettings shows all the information about the running
+// webrocket node.
 func DisplaySystemSettings() {
 	fmt.Printf("\n")
 	fmt.Printf("Node               : %s\n", ctx.NodeName())
