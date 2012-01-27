@@ -1,6 +1,7 @@
 2012-01-27  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* webrocket/storage.go: fixes in storage loading.
+	* webrocket-admin/main.go: cookie flag changed to raw text instead of cookie file path
 
 2012-01-25  Krzysztof Kowalik  <chris@nu7hat.ch>
 
