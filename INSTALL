@@ -3,20 +3,24 @@ Installation
 
 To install WebRocket you need the following tools and dependecies:
 
-Latest Go compiler
-------------------
-WebRocket is written in the Go programming language. If you don't have the Go
-compiler installed yet, follow this installation guide: http://golang.org/doc/install.html
+Latest Go compiler (supported weekly.2012-01-27)
+------------------------------------------------
+WebRocket is written in the Go programming language. Obviously you need to
+have it installed on your machine in order to compile WebRocket. If you already
+installed it, make sure that your version is supported by WebRocket.
 
 IMPORTANT: WebRocket has to be built against the latest weekly release!
+	At the moment 'weekly.2012-01-27' release is supported.
 
 So far, WebRocket is using a bunch of unreleased features and attempts to
-keep up with Go's development, thats why you should remember to clone a *head
-version* or the latest *weakly release*:
+keep up with Go's development. WebRocket is looking forward to Go 1.0 release
+and keeps it running in each weekly versions as fast as it gets released.
 
-To get and build a head version of the compiler use the following command:
+To get and build a Go version working with current WebRocket implementation,
+follow this instructions:
 
 	$ hg clone https://go.googlecode.com/hg/ go
+    $ hg checkout weekly.2012-01-27
 	$ cd go/src
 	$ ./all.bash
 
@@ -31,6 +35,13 @@ When the build succeeds you need to add few environment variables to your
 	
 If you have any other doubts or problems please follow the instructions
 in Go's documentation.
+
+Dependencies
+------------
+Since Go weekly moved 'websocket' package to subprepository, you have to
+additionally goinstall it:
+
+	$ goinstall code.google.com/p/go.net/websocket
 
 Development dependencies
 ------------------------
@@ -56,6 +67,9 @@ with your favorite package manager:
 .Arch Linux
 	$ pacman -S asciidoc
 
+.Fedora
+	$ yum install asciidoc
+    
 Building WebRocket
 ------------------
 Once you have the Go compiler and all dependencies installed, we can move
@@ -64,7 +78,7 @@ shouldn't cause too many problems. After you clone the repository, just use
 the standard 'make' targets to build and install:
 
 	$ git clone git://github.com/webrocket/webrocket.git
-	$ cd webrocket
+	$ cd webrocket && 
 	$ git submodule init && git submodule update
 	$ gomake
 	$ gomake check # it's a good idea to run tests
@@ -98,5 +112,5 @@ the manual entries for each of them to get information about their usage.
 List of available manual entries:
 
 * link:docs/webrocket-server.1.html[*webrocket-server*(1)]
-* link:docs/webrocket-ctl.1.html[*webrocket-ctl*(1)]
+* link:docs/webrocket-admin.1.html[*webrocket-admin*(1)]
 * link:docs/webrocket-monitor.1.html[*webrocket-monitor*(1)]
