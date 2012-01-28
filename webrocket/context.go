@@ -20,7 +20,7 @@ import (
 	"crypto/sha1"
 	"errors"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -125,33 +125,23 @@ func (ctx *Context) GenerateCookie(force bool) (err error) {
 	if ctx.storageDir == "" {
 		return errors.New("can't generate cookie, storage not set")
 	}
-	var buf = make([]byte, CookieSize)
-	var cookieFile *os.File
+	var buf []byte
 	cookiePath := path.Join(ctx.storageDir, ctx.nodeName+".cookie")
 	if !force {
-		cookieFile, err = os.Open(cookiePath)
-		if err == nil {
-			n, err := io.ReadFull(cookieFile, buf[:])
-			if n == CookieSize && err == nil {
-				ctx.cookie = string(buf[:])
-				cookieFile.Close()
-				return nil
-			}
+		if buf, err = ioutil.ReadFile(cookiePath); err == nil {
+			ctx.cookie = string(buf[:])
+			return nil
 		}
 	}
 	// Generate new cookie if there's none or the force flag is enabled.
+	buf = make([]byte, CookieSize)
 	if _, err = rand.Read(buf[:16]); err != nil {
 		return
 	}
 	hash := sha1.New()
 	hash.Write(buf[:16])
 	ctx.cookie = fmt.Sprintf("%x", hash.Sum([]byte{}))
-	if cookieFile, err = os.Create(cookiePath); err != nil {
-		return
-	}
-	cookieFile.Write([]byte(ctx.cookie))
-	cookieFile.Chmod(0644)
-	cookieFile.Close()
+	err = ioutil.WriteFile(cookiePath, []byte(ctx.cookie), 0644)
 	return
 }
 
@@ -207,17 +197,15 @@ func (ctx *Context) Lock() (err error) {
 	}
 	if p, err = os.FindProcess(pid); err == nil && p != nil {
 		if err = p.Signal(os.UnixSignal(0)); err == nil {
-			return errors.New(
-				fmt.Sprintf("node '%s' is already running",
-					ctx.NodeName()))
+			msg := fmt.Sprintf("node '%s' is already running", ctx.NodeName())
+			return errors.New(msg)
 		}
 	}
 lock:
 	// Write a lock file.
-	if f, err = os.Create(lockFile); err == nil {
-		pid := os.Getppid()
-		f.Write([]byte(fmt.Sprintf("%d", pid)))
-		f.Close()
+	pidstr := []byte(fmt.Sprintf("%d", os.Getppid()))
+	if err = ioutil.WriteFile(lockFile, pidstr, 0644); err != nil {
+		return
 	}
 	return nil
 }

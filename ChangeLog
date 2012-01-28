@@ -3,6 +3,7 @@
 	* webrocket/storage.go: fixes in storage loading.
 	* webrocket-admin/main.go: cookie flag changed to raw text instead of cookie file path
 	* webrocket/websocket_*.go: changed references to websocket package
+	* webrocket/context.go: simplified cookie generation and locking
 	* webrocket/README: updates
 	* webrocket-admin/README: added readme file
 	* webrocket-admin/main.go: added documentation
