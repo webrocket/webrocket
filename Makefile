@@ -23,7 +23,7 @@ MSG=$(SCRIPTS_DIR)/msg.sh
 ASCIIDOC=asciidoc
 CAT=cat
 
-all: clean pkg server admin $(EXTRA_DEPS)
+all: pkg server admin $(EXTRA_DEPS)
 	@rm -rf _build
 	@$(MSG) "gathering things together in *./build*"
 	mkdir -p $(BUILD_DIR)/bin
@@ -39,7 +39,7 @@ clean: clean-pkg clean-server clean-admin clean-deps clean-man
 
 clean-deps: clean-gouuid clean-persival clean-gostepper
 
-check: all check-pkg
+check: check-pkg
 	@$(ECHO) "\n\033[32mALL THE TESTS PASSED!\033[0m"
 
 format: format-server format-admin format-pkg
@@ -63,61 +63,62 @@ install-man:
 	-@$(MAKE) -C docs install
 
 # ./webrocket
-pkg: gouuid persival
-	@export __webrocket_st=100
+cd-pkg:
 	@$(MSG) "cd *./webrocket*"
+pkg: clean-pkg gouuid persival
 	@$(MAKE) -C webrocket
 	cp webrocket/_obj/*.a .
-clean-pkg:
+clean-pkg: cd-pkg
 	@$(MAKE) -C webrocket clean
 	rm -f *.a
-check-pkg:
+check-pkg: cd-pkg
 	@$(MAKE) -C webrocket test
 format-pkg:
 	-@$(MAKE) -C webrocket format
 
 # ./webrocket-server
-server: pkg gostepper
+cd-server: 
 	@$(MSG) "cd *./webrocket-server*"
+server: clean-server  pkg gostepper
 	@$(MAKE) -C webrocket-server
-clean-server:
+clean-server: cd-server
 	@$(MAKE) -C webrocket-server clean
-install-server:
-	@$(MAKE) -C webrocket-server install
 format-server:
 	-@$(MAKE) -C webrocket-server format
 
 # ./webrocket-admin
-admin: pkg server gostepper
+cd-admin:
 	@$(MSG) "cd *./webrocket-admin*"
+admin: clean-server pkg server gostepper
 	@$(MAKE) -C webrocket-admin
-clean-admin:
+clean-admin: cd-admin
 	@$(MAKE) -C webrocket-admin clean
-install-admin:
-	@$(MAKE) -C webrocket-admin install
 format-admin:
 	-@$(MAKE) -C webrocket-admin format
 
 # ./deps/gouuid
-gouuid:
-	@$(MSG) "cd *./deps/gouuid*"
+cd-gouuid:
+	@$(MSG) "cd *./deps/gouuid*"	
+gouuid: clean-gouuid
 	@$(MAKE) -C deps/gouuid
 	cp deps/gouuid/_obj/github.com/nu7hatch/*.a .
-clean-gouuid:
+clean-gouuid: cd-gouuid
 	$(MAKE) -C deps/gouuid clean
 
 # ./deps/persival
-persival:
+cd-persival:
 	@$(MSG) "cd *./deps/persival*"
+persival: cd-persival
 	@$(MAKE) -C deps/persival
 	cp deps/persival/_obj/github.com/nu7hatch/*.a .
-clean-persival:
+clean-persival: cd-persival
 	$(MAKE) -C deps/persival clean
 
 # ./deps/gostepper
-gostepper:
+cd-gostepper:
 	@$(MSG) "cd *./deps/gostepper*"
+gostepper: clean-gostepper
 	@$(MAKE) -C deps/gostepper
 	cp deps/gostepper/_obj/github.com/nu7hatch/*.a .
-clean-gostepper:
+clean-gostepper: cd-gostepper
 	$(MAKE) -C deps/gostepper clean
