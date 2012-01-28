@@ -26,6 +26,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+	"bytes"
+	"log"
 )
 
 var (
@@ -35,6 +37,8 @@ var (
 
 func init() {
 	ctx = NewContext()
+	buf := bytes.NewBuffer([]byte{}) // TODO: make it muted only when verbose
+	ctx.SetLog(log.New(buf, "", log.LstdFlags))
 	ctx.NewWebsocketEndpoint(":9080")
 	go ctx.websocket.ListenAndServe()
 	ctx.NewBackendEndpoint(":9081")
