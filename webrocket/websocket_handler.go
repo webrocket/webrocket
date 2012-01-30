@@ -105,7 +105,7 @@ func (h *websocketHandler) handle(ws *websocket.Conn) {
 	c := newWebsocketConnection(ws)
 	h.addConn(c)
 	defer h.deleteConn(c)
-	h.logStatus(c, "Connected", 305, "")
+	h.logStatus(c, &Status{"Connected", 305}, "")
 	for {
 		if !h.IsAlive() {
 			break
@@ -117,7 +117,7 @@ func (h *websocketHandler) handle(ws *websocket.Conn) {
 			c.Kill()
 			break
 		} else {
-			h.logStatus(c, "Bad request", 400, "")
+			h.logStatus(c, &Status{"Bad request", 400}, "")
 		}
 	}
 }
@@ -129,27 +129,26 @@ func (h *websocketHandler) handle(ws *websocket.Conn) {
 // msg - A message to be dispatched.
 //
 func (h *websocketHandler) dispatch(c *WebsocketConnection, msg *WebsocketMessage) {
-	var status string
-	var code int
+	var s *Status
 	// Route to the appropriate handler.
 	switch msg.Event() {
 	case "broadcast":
-		status, code = h.handleBroadcast(c, msg)
+		s = h.handleBroadcast(c, msg)
 	case "trigger":
-		status, code = h.handleTrigger(c, msg)
+		s = h.handleTrigger(c, msg)
 	case "subscribe":
-		status, code = h.handleSubscribe(c, msg)
+		s = h.handleSubscribe(c, msg)
 	case "unsubscribe":
-		status, code = h.handleUnsubscribe(c, msg)
+		s = h.handleUnsubscribe(c, msg)
 	case "auth":
-		status, code = h.handleAuth(c, msg)
+		s = h.handleAuth(c, msg)
 	case "close":
-		status, code = h.handleClose(c, msg)
+		s = h.handleClose(c, msg)
 	default:
-		status, code = "Bad request", 400
+		s = &Status{"Bad request", 400}
 	}
 	// Log status code.
-	h.logStatus(c, status, code, msg.JSON())
+	h.logStatus(c, s, msg.JSON())
 }
 
 // logStatus writes specified status information to the logs. The 3xx
@@ -166,30 +165,24 @@ func (h *websocketHandler) dispatch(c *WebsocketConnection, msg *WebsocketMessag
 //
 //     h.logStatus(c, "Bad request", 400, handledMessage)
 //
-func (h *websocketHandler) logStatus(c *WebsocketConnection, status string,
-	code int, msg string) {
+func (h *websocketHandler) logStatus(c *WebsocketConnection, s *Status, msg string) {
 	switch {
-	case code >= 400:
+	case s.Code >= 400:
 		// TODO: make the answers only when the client's debug mode is
 		// enabled or some 'optional errors' flag enabled or smth...
-		c.Send(map[string]interface{}{
-			":error": map[string]interface{}{
-				"code":   code,
-				"status": status,
-			},
-		})
-	case code >= 300 && code < 400:
+		c.Send(map[string]interface{}{":error": s.Map()})
+	case s.Code >= 300 && s.Code < 400:
 		// Log information statuses only when debug mode is enabled.
 		// TODO: log after adding a debug mode...
 		return
-	case code < 300:
+	case s.Code < 300:
 		// Nothing to do, just go to logging...
 	}
 	if h.vhost == nil {
 		// Should never happen, but better safe than sorry!
 		return
 	}
-	h.endpoint.log.Printf("websocket[%s]: %d %s; %s", h.vhost.Path(), code, status, msg)
+	h.endpoint.log.Printf("websocket[%s]: %s; %s", h.vhost.Path(), s.String(), msg)
 }
 
 // Websocket Frontent Protocol handlers
@@ -198,7 +191,7 @@ func (h *websocketHandler) logStatus(c *WebsocketConnection, status string,
 // handleAuth is a handler for the 'authenticate' Websocket Frontend
 // Protocol event.
 func (h *websocketHandler) handleAuth(c *WebsocketConnection,
-	msg *WebsocketMessage) (string, int) {
+	msg *WebsocketMessage) (*Status) {
 	// {
 	//     "token": "access token..."
 	// }
@@ -208,7 +201,7 @@ func (h *websocketHandler) handleAuth(c *WebsocketConnection,
 
 	if token, ok = msg.Get("token").(string); !ok || token == "" {
 		// No token specified, invalid payload!
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if c.IsAuthenticated() {
 		// Close current session if authenticated.
@@ -216,10 +209,10 @@ func (h *websocketHandler) handleAuth(c *WebsocketConnection,
 	}
 	if perm, ok = h.vhost.ValidateSingleAccessToken(token); !ok || perm == nil {
 		// No such sigle access token, access denied!
-		return "Unauthorized", 402
+		return &Status{"Unauthorized", 402}
 	}
 	c.authenticate(perm)
-	return "Authenticated", 201
+	return &Status{"Authenticated", 201}
 }
 
 // handleSubscribe is a handler for the 'subscribe' Websocket Frontend
@@ -230,7 +223,7 @@ func (h *websocketHandler) handleAuth(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleSubscribe(c *WebsocketConnection,
-	msg *WebsocketMessage) (string, int) {
+	msg *WebsocketMessage) (*Status) {
 	// {
 	//     "channel": "channel name...",
 	//     "hidden":  true, // or false
@@ -244,7 +237,7 @@ func (h *websocketHandler) handleSubscribe(c *WebsocketConnection,
 
 	if chanName, ok = msg.Get("channel").(string); chanName == "" {
 		// Channel name not found, invalid payload!
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if hidden, ok = msg.Get("hidden").(bool); !ok {
 		// No hidden option specified, setting to false by default.
@@ -256,14 +249,14 @@ func (h *websocketHandler) handleSubscribe(c *WebsocketConnection,
 	}
 	if channel, err = h.vhost.Channel(chanName); err != nil {
 		// Nope, channel not found!
-		return "Channel not found", 454
+		return &Status{"Channel not found", 454}
 	}
 	if channel.IsPrivate() && !c.IsAllowed(chanName) {
 		// Can't operate on this channel, access denied!
-		return "Forbidden", 403
+		return &Status{"Forbidden", 403}
 	}
 	channel.subscribe(c, hidden, data)
-	return "Subscribed", 202
+	return &Status{"Subscribed", 202}
 }
 
 // handleUnsubscribe is a handler for the 'unsubscribe' Websocket Frontend
@@ -274,7 +267,7 @@ func (h *websocketHandler) handleSubscribe(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleUnsubscribe(c *WebsocketConnection,
-	msg *WebsocketMessage) (string, int) {
+	msg *WebsocketMessage) (*Status) {
 	// {
 	//     "channel": "channel name...",
 	//     "data": {...}
@@ -287,7 +280,7 @@ func (h *websocketHandler) handleUnsubscribe(c *WebsocketConnection,
 
 	if chanName, ok = msg.Get("channel").(string); chanName == "" {
 		// Channel name not found, invalid payload!
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if data, ok = msg.Get("data").(map[string]interface{}); !ok {
 		// No user data specified, making empty one by default.
@@ -295,14 +288,14 @@ func (h *websocketHandler) handleUnsubscribe(c *WebsocketConnection,
 	}
 	if channel, err = h.vhost.Channel(chanName); err != nil {
 		// Nope, channel not found!
-		return "Channel not found", 454
+		return &Status{"Channel not found", 454}
 	}
 	if !channel.HasSubscriber(c) {
 		// This guy is not subscribing this channel!
-		return "Not subscribed", 453
+		return &Status{"Not subscribed", 453}
 	}
 	channel.unsubscribe(c, data, true)
-	return "Unsubscribed", 203
+	return &Status{"Unsubscribed", 203}
 }
 
 // handleBroadcast is a handler for the 'broadcast' Websocket Frontend
@@ -313,7 +306,7 @@ func (h *websocketHandler) handleUnsubscribe(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
-	msg *WebsocketMessage) (string, int) {
+	msg *WebsocketMessage) (*Status) {
 	// {
 	//     "channel": "channel name...",
 	//     "event": "event name...",
@@ -328,11 +321,11 @@ func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
 
 	if chanName, ok = msg.Get("channel").(string); chanName == "" {
 		// Channel name not found, invalid payload!
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if eventName, ok = msg.Get("event").(string); eventName == "" {
 		// Event name not found, invalid payload!
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if data, ok = msg.Get("data").(map[string]interface{}); !ok {
 		// No user data specified, making empty one by default.
@@ -344,15 +337,15 @@ func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
 	}
 	if channel, err = h.vhost.Channel(chanName); err != nil {
 		// Nope, channel not found!
-		return "Channel not found", 454
+		return &Status{"Channel not found", 454}
 	}
 	if !channel.HasSubscriber(c) {
 		// Can't broadcast on the channel without subscribing it!
-		return "Not subscribed", 453
+		return &Status{"Not subscribed", 453}
 	}
 	if triggerName != "" && !c.IsAuthenticated() { // FIXME: Backend should have permissions too!
 		// Can't trigger, access denied!
-		return "Forbidden", 403
+		return &Status{"Forbidden", 403}
 	}
 	// Extending data with sender and channel information before
 	// passing it forward...
@@ -364,15 +357,15 @@ func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
 	if triggerName != "" {
 		if h.vhost == nil || h.vhost.ctx == nil || h.vhost.ctx.backend == nil {
 			// Should never happen, but you know... never say never :)
-			return "Internal error", 597
+			return &Status{"Internal error", 597}
 		}
 		backend := h.vhost.ctx.backend
 		err = backend.Trigger(h.vhost, map[string]interface{}{triggerName: data})
 		if err != nil {
-			return "Internal error", 597
+			return &Status{"Internal error", 597}
 		}
 	}
-	return "Broadcasted", 204
+	return &Status{"Broadcasted", 204}
 }
 
 // handleTrigger is a handler for the 'trigger' Websocket Frontend Protocol
@@ -383,7 +376,7 @@ func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
-	msg *WebsocketMessage) (string, int) {
+	msg *WebsocketMessage) (*Status) {
 	// {
 	//     "event": "event name...",
 	//     "data": {...}
@@ -395,7 +388,7 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 
 	if eventName, ok = msg.Get("event").(string); eventName == "" {
 		// Event name not found, invalid payload!
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if data, ok = msg.Get("data").(map[string]interface{}); !ok {
 		// No user data specified, making empty one by default.
@@ -403,11 +396,11 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 	}
 	if !c.IsAuthenticated() { // FIXME: Backend should have permissions too!
 		// Can't trigger, access denied!
-		return "Forbidden", 403
+		return &Status{"Forbidden", 403}
 	}
 	if h.vhost == nil || h.vhost.ctx == nil || h.vhost.ctx.backend == nil {
 		// Should never happen... i hope...
-		return "Internal error", 597
+		return &Status{"Internal error", 597}
 	}
 	// Extending data with sender information before passing
 	// it forward...
@@ -415,9 +408,9 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 	backend := h.vhost.ctx.backend
 	err = backend.Trigger(h.vhost, map[string]interface{}{eventName: data})
 	if err != nil {
-		return "Internal error", 597
+		return &Status{"Internal error", 597}
 	}
-	return "Triggered", 205
+	return &Status{"Triggered", 205}
 }
 
 // handleClose is a handler for the 'close' Websocket Frontend Protocol event.
@@ -427,9 +420,9 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleClose(c *WebsocketConnection,
-	msg *WebsocketMessage) (string, int) {
+	msg *WebsocketMessage) (*Status) {
 	c.Kill()
-	return "Disconnected", 207
+	return &Status{"Disconnected", 207}
 }
 
 // Exported

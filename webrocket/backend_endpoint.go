@@ -150,31 +150,30 @@ func (b *BackendEndpoint) handle(conn net.Conn) {
 	var idty *backendIdentity
 	var ok bool
 	var err error
-	var status string
-	var code int
+	var s *Status
 
 	c := newBackendConnection(conn)
 	if req, err = c.Recv(); err != nil {
-		status, code = "Bad request", 400
+		s = &Status{"Bad request", 400}
 		c.Send("ER", "400")
 		goto log
 	}
 	if vhost, idty, ok = b.authenticate(req.Identity); !ok {
-		status, code = "Unauthorized", 402
+		s = &Status{"Unauthorized", 402}
 		goto log
 	}
 	// Dispatch the request...
 	switch {
 	case idty.Type == BackendSocketDealer:
-		status, code = b.dispatchDealer(vhost, req, idty)
+		s = b.dispatchDealer(vhost, req, idty)
 	case idty.Type == BackendSocketReq:
-		status, code = b.dispatchReq(vhost, req, idty)
+		s = b.dispatchReq(vhost, req, idty)
 	default:
-		status, code = "Bad request", 400
+		s = &Status{"Bad request", 400}
 	}
 
 log:
-	b.logStatus(vhost, status, code, req)
+	b.logStatus(vhost, s, req)
 }
 
 // dispatchDealer handles a request received from the dealer socket.
@@ -185,10 +184,10 @@ log:
 //
 // Returns a status message and code. 
 func (b *BackendEndpoint) dispatchDealer(vhost *Vhost, req *backendRequest,
-	idty *backendIdentity) (string, int) {
+	idty *backendIdentity) (*Status) {
 	if vhost.lobby == nil {
 		// Something's fucked up, it should never happen...
-		return "Internal error", 597
+		return &Status{"Internal error", 597}
 	}
 	switch req.Command {
 	case "RD": // Ready
@@ -197,15 +196,15 @@ func (b *BackendEndpoint) dispatchDealer(vhost *Vhost, req *backendRequest,
 		defer vhost.lobby.deleteWorker(worker)
 		// Blocking in here, keeping worker alive.
 		worker.listen()
-		return "Disconnected", 309
+		return &Status{"Disconnected", 309}
 	case "HB": // Heartbeat
 		// Seems that worker sent heartbeat after liveness period,
 		// we have to send a quit message restart it.
 		req.Reply("QT")
-		return "Expired", 408
+		return &Status{"Expired", 408}
 	}
 	// Invalid command received...
-	return "Bad request", 400
+	return &Status{"Bad request", 400}
 }
 
 // dispatchReq handles a request received from the req socket.
@@ -216,34 +215,33 @@ func (b *BackendEndpoint) dispatchDealer(vhost *Vhost, req *backendRequest,
 //
 // Returns a status message and code.
 func (b *BackendEndpoint) dispatchReq(vhost *Vhost, req *backendRequest,
-	idty *backendIdentity) (status string, code int) {
+	idty *backendIdentity) (s *Status) {
 	switch req.Command {
 	case "BC": // Broadcast
-		status, code = b.handleReqBroadcast(vhost, req)
+		s = b.handleReqBroadcast(vhost, req)
 	case "OC": // Open channel
-		status, code = b.handleReqOpenChannel(vhost, req)
+		s = b.handleReqOpenChannel(vhost, req)
 	case "CC": // Close channel
-		status, code = b.handleReqCloseChannel(vhost, req)
+		s = b.handleReqCloseChannel(vhost, req)
 	case "AT": // Generate single access token
-		status, code = b.handleReqSingleAccessTokenRequest(vhost, req)
+		s = b.handleReqSingleAccessTokenRequest(vhost, req)
 	default:
-		status, code = "Bad request", 400
+		s = &Status{"Bad request", 400}
 	}
 	return
 }
 
-func (b *BackendEndpoint) logStatus(vhost *Vhost, status string, code int,
-	req *backendRequest) {
+func (b *BackendEndpoint) logStatus(vhost *Vhost, s *Status, req *backendRequest) {
 	switch {
-	case code >= 400:
+	case s.Code >= 400:
 		if req != nil {
-			req.Reply("ER", strconv.Itoa(code))
+			req.Reply("ER", strconv.Itoa(s.Code))
 		}
-	case code >= 300 && code < 400:
+	case s.Code >= 300 && s.Code < 400:
 		// Log information statuses only when debug mode is enabled.
 		// TODO: log after adding a debug mode...
 		return
-	case code < 300:
+	case s.Code < 300:
 		// Nothing to do, just go to logging...
 	}
 	vhostPath := "???"
@@ -254,7 +252,7 @@ func (b *BackendEndpoint) logStatus(vhost *Vhost, status string, code int,
 	if req != nil {
 		reqString = req.String()
 	}
-	b.log.Printf("backend[%s]: %d %s; %s", vhostPath, code, status, reqString)
+	b.log.Printf("backend[%s]: %d %s; %s", vhostPath, s.String(), reqString)
 }
 
 // handleReqBroadcast is a handler for the backend's broadcast (BC) request.
@@ -263,7 +261,7 @@ func (b *BackendEndpoint) logStatus(vhost *Vhost, status string, code int,
 // req   - The request to be handled.
 //
 // Returns textual status and code.
-func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) (string, int) {
+func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) (*Status) {
 	// <<<
 	// channel name\n
 	// event name\n
@@ -275,12 +273,12 @@ func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) 
 	var err error
 
 	if req.Len() < 3 {
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	chanName, eventName = string(req.Message[0]), string(req.Message[1])
 	if chanName == "" || eventName == "" {
 		// No channel or event name specified!
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if err = json.Unmarshal(req.Message[2], &data); err != nil {
 		// No data specified, making empty one...
@@ -288,13 +286,13 @@ func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) 
 	}
 	if channel, err = vhost.Channel(chanName); err != nil {
 		// Request channel doesn't exist!
-		return "Channel not found", 454
+		return &Status{"Channel not found", 454}
 	}
 	// Extending data with the channel name before pass it forward.
 	data["channel"] = chanName
 	channel.Broadcast(map[string]interface{}{eventName: data}, false)
 	req.Reply("OK")
-	return "Broadcasted", 204
+	return &Status{"Broadcasted", 204}
 }
 
 // handleReqOpenChannel is a handler for the backend's open channel (OC) request.
@@ -303,7 +301,7 @@ func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) 
 // req   - The request to be handled.
 //
 // Returns textual status and code.
-func (b *BackendEndpoint) handleReqOpenChannel(vhost *Vhost, req *backendRequest) (string, int) {
+func (b *BackendEndpoint) handleReqOpenChannel(vhost *Vhost, req *backendRequest) (*Status) {
 	// <<<
 	// channel name\n
 	// >>>
@@ -312,25 +310,25 @@ func (b *BackendEndpoint) handleReqOpenChannel(vhost *Vhost, req *backendRequest
 	var err error
 
 	if req.Len() < 1 {
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	chanName = string(req.Message[0])
 	if chanName == "" {
 		// No channel name or type specified.
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if _, err = vhost.Channel(chanName); err == nil {
 		// Channel with such name already exists, it's ok!
 		req.Reply("OK")
-		return "Channel exists", 251
+		return &Status{"Channel exists", 251}
 	}
 	chanType = channelTypeFromName(chanName)
 	if _, err = vhost.OpenChannel(chanName, chanType); err != nil {
 		// Requested channel name is invalid!
-		return "Invalid channel name", 451
+		return &Status{"Invalid channel name", 451}
 	}
 	req.Reply("OK")
-	return "Channel opened", 250
+	return &Status{"Channel opened", 250}
 }
 
 // handleReqCloseChannel is a handler for the backend's close channel (CC) request.
@@ -339,7 +337,7 @@ func (b *BackendEndpoint) handleReqOpenChannel(vhost *Vhost, req *backendRequest
 // req   - The request to be handled.
 //
 // Returns textual status and code.
-func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendRequest) (string, int) {
+func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendRequest) (*Status) {
 	// <<<
 	// channel name\n
 	// >>>
@@ -347,17 +345,17 @@ func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendReques
 	var ok bool
 
 	if req.Len() < 1 {
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if chanName = string(req.Message[0]); chanName == "" {
 		// No channel name specified.
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if ok = vhost.DeleteChannel(chanName); !ok {
-		return "Channel not found", 454
+		return &Status{"Channel not found", 454}
 	}
 	req.Reply("OK")
-	return "Channel closed", 252
+	return &Status{"Channel closed", 252}
 }
 
 // handleReqSingleAccessTokenRequest is a handler for the backend's single
@@ -368,26 +366,26 @@ func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendReques
 //
 // Returns textual status and code.
 func (b *BackendEndpoint) handleReqSingleAccessTokenRequest(vhost *Vhost,
-	req *backendRequest) (string, int) {
+	req *backendRequest) (*Status) {
 	// <<<
 	// permission regexp\n
 	// >>>
 	var uid, pattern, token string
 
 	if req.Len() < 2 {
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	uid, pattern = string(req.Message[0]), string(req.Message[1])
 	if pattern == "" || uid == "" {
 		// No permission regexp specified.
-		return "Bad request", 400
+		return &Status{"Bad request", 400}
 	}
 	if token = vhost.GenerateSingleAccessToken(uid, pattern); token == "" {
 		// Couldn't generate an access token.
-		return "Internal error", 597
+		return &Status{"Internal error", 597}
 	}
 	req.Reply("AT", token)
-	return "Single access token generated", 270
+	return &Status{"Single access token generated", 270}
 }
 
 // Exported

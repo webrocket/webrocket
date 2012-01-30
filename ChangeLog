@@ -1,3 +1,9 @@
+2012-01-30  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* webrocket/backend_endpoint.go: switched from status and code to &Status
+	* webrocket/webrocket.go: added Status struct
+	* webrocket/websocket_endpoint.go: switched from status and code to &Status
+
 2012-01-27  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* webrocket/storage.go: fixes in storage loading.

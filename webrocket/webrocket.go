@@ -33,6 +33,25 @@ func Version() string {
 	return fmt.Sprintf("%d.%d.%d", VerMajor, VerMinor, VerPatch)
 }
 
+// Status represents client response statuses.
+type Status struct {
+	Status string
+	Code   int
+}
+
+// Status returns full status message.
+func (s *Status) String() string {
+	return fmt.Sprintf("%d %s", s.Code, s.Status)
+}
+
+// Map returns status as a map.
+func (s *Status) Map() map[string]interface{} {
+	return map[string]interface{}{
+		"code":   s.Code,
+		"status": s.Status,
+	}
+}
+
 // DefaultNodeName discovers name of the node from the host name configured
 // in the operating system. Basically the result of the 'uname -n' command
 // will be returned.
