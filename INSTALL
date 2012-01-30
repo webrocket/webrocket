@@ -12,10 +12,6 @@ installed it, make sure that your version is supported by WebRocket.
 IMPORTANT: WebRocket has to be built against the latest weekly release!
 	At the moment 'weekly.2012-01-27' release is supported.
 
-So far, WebRocket is using a bunch of unreleased features and attempts to
-keep up with Go's development. WebRocket is looking forward to Go 1.0 release
-and keeps it running in each weekly versions as fast as it gets released.
-
 To get and build a Go version working with current WebRocket implementation,
 follow this instructions:
 
@@ -78,7 +74,7 @@ shouldn't cause too many problems. After you clone the repository, just use
 the standard 'make' targets to build and install:
 
 	$ git clone git://github.com/webrocket/webrocket.git
-	$ cd webrocket && 
+	$ cd webrocket
 	$ git submodule init && git submodule update
 	$ gomake
 	$ gomake check # it's a good idea to run tests
@@ -95,15 +91,6 @@ and other docs, use the following 'make' targets
 	$ make papers
 
 ...generates html versions of all other documents (README, INSTALL, etc.).
-
-Troubleshooting
----------------
-You may encounter a situation when WebRocket fails to build due to using
-a stale version of the Go compiler and fails again due to compiler version
-mismatch after you update it to the latest version. In this case you should
-cleanup the project workspace by running the 'clean' target:
-
-	$ make clean
 
 Usage
 -----
