@@ -68,7 +68,7 @@ func readCookie() {
 	if Cookie != "" {
 		return
 	}
-	cookiePath := "/var/lib/webrocket" + webrocket.DefaultNodeName() + ".cookie"
+	cookiePath := "/var/lib/webrocket/" + webrocket.DefaultNodeName() + ".cookie"
 	data, err := ioutil.ReadFile(cookiePath)
 	if err != nil {
 		// We not reporting this error here, server will claim
