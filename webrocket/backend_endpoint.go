@@ -252,7 +252,7 @@ func (b *BackendEndpoint) logStatus(vhost *Vhost, s *Status, req *backendRequest
 	if req != nil {
 		reqString = req.String()
 	}
-	b.log.Printf("backend[%s]: %d %s; %s", vhostPath, s.String(), reqString)
+	b.log.Printf("backend[%s]: %s; %s", vhostPath, s.String(), reqString)
 }
 
 // handleReqBroadcast is a handler for the backend's broadcast (BC) request.
