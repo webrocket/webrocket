@@ -1,3 +1,9 @@
+2012-02-08  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* pkg/webrocket/admin_endpoint.go: fixed typo
+	* pkg/webrocket/webrocket.go: added ReadCookie func
+	* cmd/webrocket-admin/: refactored admin tool
+
 2012-02-07  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* webrocket/: moved to pkg/webrocket, gofix

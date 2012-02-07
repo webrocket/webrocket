@@ -46,6 +46,8 @@ tools: clean $(BUILD_MAN)
 clean-tools:
 	-@$(ECHO) "-- \033[0;35mCleaning up\033[0m"
 	@go clean ./...
+	-@rm -rf webrocket-admin
+	-@rm -rf webrocket-server
 
 install-tools:
 	-@$(ECHO) "\n-- \033[0;36mInstalling tools\033[0m"

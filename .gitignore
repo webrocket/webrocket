@@ -3,6 +3,7 @@ _test
 _pb
 _data
 _build
+_testdata
 *.6
 *.out
 _testmain.go
@@ -20,4 +21,5 @@ README.html
 *.mprof
 .hg
 build
-webrocket-*
+webrocket-admin
+webrocket-server

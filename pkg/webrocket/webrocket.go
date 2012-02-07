@@ -17,6 +17,7 @@ package webrocket
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os/exec"
 	"strings"
 )
@@ -62,4 +63,21 @@ func DefaultNodeName() string {
 		panic("can't get node name: " + err.Error())
 	}
 	return strings.TrimSpace(string(node))
+}
+
+// ReadCookie reads cookie string from the node's cookie file.
+//
+// Example:
+//
+//    node := webrocket.DefaultNodeName()
+//    cookie := webrocket.ReadCookie(node)
+//
+// Returns cookie string.
+func ReadCookie(node string) string {
+	cookiePath := "/var/lib/webrocket/" + node + ".cookie"
+	data, err := ioutil.ReadFile(cookiePath)
+	if err != nil {
+		return ""
+	}
+	return string(data)
 }

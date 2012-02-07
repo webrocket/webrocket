@@ -319,7 +319,7 @@ func (a *AdminEndpoint) deleteChannel(w http.ResponseWriter, r *http.Request) {
 	chanName := r.Form.Get("name")
 	ok := vhost.DeleteChannel(chanName) // FIXME: why DeleteVhost returns error and DeleteChannel bool? o_O
 	if !ok {
-		a.error(w, http.StatusNotFound, errors.New("channel doesn exist"))
+		a.error(w, http.StatusNotFound, errors.New("channel doesn't exist"))
 		return
 	}
 	adminStatusLog(a, fmt.Sprintf("Closed channel `%s` under vhost `%s`", chanName, vhost.path))
