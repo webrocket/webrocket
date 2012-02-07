@@ -20,3 +20,4 @@ README.html
 *.mprof
 .hg
 build
+webrocket-*

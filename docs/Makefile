@@ -1,6 +1,7 @@
 ASCIIDOC = asciidoc
 ASCIIDOC_OPTS = -b html5 -d manpage -f ./asciidoc.conf
 A2X = a2x
+ECHO=echo
 
 DOCS_MAN1 = \
 	webrocket-server.1
@@ -23,15 +24,19 @@ $(DOCS_MAN3): % : %.txt
 $(DOCS_MAN3_HTML): %.html : %.txt
 
 %: %.txt
-	$(A2X) -L -f manpage $<
+	-@$(ECHO) $< | sed "s/\.txt//"
+	@$(A2X) -L -f manpage $<
 
 %.html: %.txt
-	$(ASCIIDOC) $(ASCIIDOC_OPTS) -o $@ $<
+	@$(ASCIIDOC) $(ASCIIDOC_OPTS) -o $@ $<
 
 clean-man: clean-man1 #clean-man3
 
 clean-man1:
-	rm -f $(DOCS_MAN1) $(DOCS_MAN1_HTML)
+	@rm -f $(DOCS_MAN1) $(DOCS_MAN1_HTML)
 
 clean-man3:
-	rm -f $(DOCS_MAN3) $(DOCS_MAN3_HTML)
+	@rm -f $(DOCS_MAN3) $(DOCS_MAN3_HTML)
+
+install:
+	@true

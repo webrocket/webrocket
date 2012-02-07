@@ -1,21 +1,20 @@
-GETTING STARTED
-===============
+GETTING STARTED...
 
 Now you can start a server with the following command:
 
-    $ sudo ./build/bin/webrocket-server
+    $ sudo webrocket-server
 
 ...and configure it afterwords:
 
-    $ ./build/bin/webrocket-admin add_vhost /hello
-    $ ./build/bin/webrocket-admin add_channel /hello world
+    $ sudo webrocket-admin add_vhost /hello
+    $ sudo webrocket-admin add_channel /hello world
 
 To get started with WebRocket you can include the following code in your HTML file as a base:
 
     <script src="http://127.0.0.1:8080/webrocket.js"></script>
     <script>
-        ws = new WebRocket("/test");
-        ws.subscribe("test", function(channel) {
+        ws = new WebRocket("/hello");
+        ws.subscribe("world", function(channel) {
             // ...
         });
     </script>
