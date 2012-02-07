@@ -42,27 +42,21 @@ explanation what you can find in there.
 'docs'::
 	Documentation and man pages
 
-'deps'::
-	External dependencies bundled with the project
-
 'distros'::
 	Tools and files specific for various operating systems
 
-'scripts'::
-	Various script supporting the building and deployment process.
-    
-'webrocket'::
+'pkg/webrocket'::
 	WebRocket core library
 
-'webrocket-server'::
+'cmd/webrocket-server'::
 	Tool for starting and preconfiguring single WebRocket
 	server node.
 
-'webrocket-admin'::
+'cmd/webrocket-admin'::
 	Tool for ad-hoc configuration management of the running
 	WebRocket server nodes.
 
-'webrocket-monitor'::
+'cmd/webrocket-monitor'::
 	Tool for WebRocket server nodes and clusters monitoring.
 
 Sponsors
