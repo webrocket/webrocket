@@ -1,3 +1,12 @@
+2012-02-07  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* webrocket/: moved to pkg/webrocket, gofix
+	* webrocket-admin/: moved to cmd/webrocket-admin, gofix
+	* webrocket-server/: moved to cmd/webrocket-server, gofix
+	* Makefile: adjusted to use go tool
+	* docs/Makefile: fixes
+	* INSTALL: updated installation steps
+	* README: updated information
 
 2012-01-30  Krzysztof Kowalik  <chris@nu7hat.ch>
 
