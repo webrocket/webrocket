@@ -16,7 +16,7 @@
 package webrocket
 
 import (
-	uuid "../uuid"
+	uuid "github.com/nu7hatch/gouuid"
 	"testing"
 )
 

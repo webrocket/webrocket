@@ -16,10 +16,10 @@
 package main
 
 import (
-	stepper "../gostepper"
-	"../webrocket"
 	"flag"
 	"fmt"
+	stepper "github.com/nu7hatch/gostepper"
+	"github.com/webrocket/webrocket/pkg/webrocket"
 	"io/ioutil"
 	"os"
 )

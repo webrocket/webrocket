@@ -184,7 +184,7 @@ log:
 //
 // Returns a status message and code. 
 func (b *BackendEndpoint) dispatchDealer(vhost *Vhost, req *backendRequest,
-	idty *backendIdentity) (*Status) {
+	idty *backendIdentity) *Status {
 	if vhost.lobby == nil {
 		// Something's fucked up, it should never happen...
 		return &Status{"Internal error", 597}
@@ -261,7 +261,7 @@ func (b *BackendEndpoint) logStatus(vhost *Vhost, s *Status, req *backendRequest
 // req   - The request to be handled.
 //
 // Returns textual status and code.
-func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) (*Status) {
+func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) *Status {
 	// <<<
 	// channel name\n
 	// event name\n
@@ -301,7 +301,7 @@ func (b *BackendEndpoint) handleReqBroadcast(vhost *Vhost, req *backendRequest) 
 // req   - The request to be handled.
 //
 // Returns textual status and code.
-func (b *BackendEndpoint) handleReqOpenChannel(vhost *Vhost, req *backendRequest) (*Status) {
+func (b *BackendEndpoint) handleReqOpenChannel(vhost *Vhost, req *backendRequest) *Status {
 	// <<<
 	// channel name\n
 	// >>>
@@ -337,7 +337,7 @@ func (b *BackendEndpoint) handleReqOpenChannel(vhost *Vhost, req *backendRequest
 // req   - The request to be handled.
 //
 // Returns textual status and code.
-func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendRequest) (*Status) {
+func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendRequest) *Status {
 	// <<<
 	// channel name\n
 	// >>>
@@ -366,7 +366,7 @@ func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendReques
 //
 // Returns textual status and code.
 func (b *BackendEndpoint) handleReqSingleAccessTokenRequest(vhost *Vhost,
-	req *backendRequest) (*Status) {
+	req *backendRequest) *Status {
 	// <<<
 	// permission regexp\n
 	// >>>

@@ -18,12 +18,12 @@
 package main
 
 import (
-	stepper "../gostepper"
-	"../webrocket"
+	"exp/signal"
 	"flag"
 	"fmt"
+	stepper "github.com/nu7hatch/gostepper"
+	"github.com/webrocket/webrocket/pkg/webrocket"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
@@ -131,7 +131,7 @@ func SignalTrap() {
 	for sig := range signal.Incoming {
 		if usig, ok := sig.(os.UnixSignal); ok {
 			switch usig {
-			case os.SIGQUIT, os.SIGINT:
+			case syscall.SIGQUIT, syscall.SIGINT:
 				fmt.Printf("\n\033[33mInterrupted\033[0m\n")
 				if ctx != nil {
 					fmt.Printf("\n")
@@ -142,9 +142,9 @@ func SignalTrap() {
 					s.Ok()
 				}
 				os.Exit(0)
-			case os.SIGTSTP:
+			case syscall.SIGTSTP:
 				syscall.Kill(syscall.Getpid(), syscall.SIGSTOP)
-			case os.SIGHUP:
+			case syscall.SIGHUP:
 				// TODO: reload configuration
 			}
 		}

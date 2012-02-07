@@ -16,7 +16,7 @@
 package webrocket
 
 import (
-	"../persival"
+	"github.com/nu7hatch/persival"
 	"os"
 	"path"
 	"regexp"
@@ -53,10 +53,6 @@ type _permission struct {
 	Pattern *regexp.Regexp
 	// The permission's token.
 	Token string
-}
-
-type dum struct {
-	V interface{}
 }
 
 // Initializer.

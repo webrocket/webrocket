@@ -16,8 +16,8 @@
 package webrocket
 
 import (
-	"../uuid"
 	"code.google.com/p/go.net/websocket"
+	"github.com/nu7hatch/gouuid"
 	"io"
 	"sync"
 )

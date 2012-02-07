@@ -16,18 +16,18 @@
 package webrocket
 
 import (
-	"../uuid"
 	"bufio"
+	"bytes"
 	"code.google.com/p/go.net/websocket"
 	"fmt"
+	"github.com/nu7hatch/gouuid"
+	"log"
 	"net"
 	"os"
 	"regexp"
 	"strings"
 	"testing"
 	"time"
-	"bytes"
-	"log"
 )
 
 var (

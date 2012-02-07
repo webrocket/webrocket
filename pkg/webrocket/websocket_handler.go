@@ -191,7 +191,7 @@ func (h *websocketHandler) logStatus(c *WebsocketConnection, s *Status, msg stri
 // handleAuth is a handler for the 'authenticate' Websocket Frontend
 // Protocol event.
 func (h *websocketHandler) handleAuth(c *WebsocketConnection,
-	msg *WebsocketMessage) (*Status) {
+	msg *WebsocketMessage) *Status {
 	// {
 	//     "token": "access token..."
 	// }
@@ -223,7 +223,7 @@ func (h *websocketHandler) handleAuth(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleSubscribe(c *WebsocketConnection,
-	msg *WebsocketMessage) (*Status) {
+	msg *WebsocketMessage) *Status {
 	// {
 	//     "channel": "channel name...",
 	//     "hidden":  true, // or false
@@ -267,7 +267,7 @@ func (h *websocketHandler) handleSubscribe(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleUnsubscribe(c *WebsocketConnection,
-	msg *WebsocketMessage) (*Status) {
+	msg *WebsocketMessage) *Status {
 	// {
 	//     "channel": "channel name...",
 	//     "data": {...}
@@ -306,7 +306,7 @@ func (h *websocketHandler) handleUnsubscribe(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
-	msg *WebsocketMessage) (*Status) {
+	msg *WebsocketMessage) *Status {
 	// {
 	//     "channel": "channel name...",
 	//     "event": "event name...",
@@ -376,7 +376,7 @@ func (h *websocketHandler) handleBroadcast(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
-	msg *WebsocketMessage) (*Status) {
+	msg *WebsocketMessage) *Status {
 	// {
 	//     "event": "event name...",
 	//     "data": {...}
@@ -420,7 +420,7 @@ func (h *websocketHandler) handleTrigger(c *WebsocketConnection,
 //
 // Returns status message and code.
 func (h *websocketHandler) handleClose(c *WebsocketConnection,
-	msg *WebsocketMessage) (*Status) {
+	msg *WebsocketMessage) *Status {
 	c.Kill()
 	return &Status{"Disconnected", 207}
 }
