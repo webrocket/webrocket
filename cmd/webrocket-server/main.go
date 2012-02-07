@@ -45,8 +45,6 @@ var (
 	KeyFile string
 	// A path to the The storage directory.
 	StorageDir string
-	// Shall server be daemonized?
-	Daemon bool
 )
 
 var (
@@ -64,7 +62,6 @@ func init() {
 	flag.StringVar(&CertFile, "cert", "", "path to server certificate")
 	flag.StringVar(&KeyFile, "key", "", "private key")
 	flag.StringVar(&StorageDir, "storage-dir", "/var/lib/webrocket", "path to webrocket's internal data-store")
-	flag.BoolVar(&Daemon, "daemon", false, "run in the background")
 	flag.Parse()
 
 	StorageDir, _ = filepath.Abs(StorageDir)
@@ -151,13 +148,6 @@ func SignalTrap() {
 	}
 }
 
-// Daeminize forks the application into a background process and exits
-// from the main one.
-func Daemonize() int {
-	// TODO: ...
-	return 0
-}
-
 // DisplayAsciiArt as you can see it displays this amazing ASCII art
 // spaceship drawing.
 func DisplayAsciiArt() {
@@ -183,9 +173,6 @@ func DisplaySystemSettings() {
 }
 
 func main() {
-	if Daemon {
-		Daemonize()
-	}
 	DisplayAsciiArt()
 	SetupContext()
 	SetupEndpoint("backend endpoint", ctx.NewBackendEndpoint(BackendAddr))

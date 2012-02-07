@@ -23,7 +23,6 @@ clean: clean-tools
 
 install: tools install-tools install-man
 	-@$(ECHO) "\n\033[1;32mCONGRATULATIONS COMRADE!\033[0;32m\nWebRocket has been built, tested and installed!\033[0m\n"
-	-@$(CAT) ./INTRO; $(ECHO) ""
 
 format:
 	-@$(ECHO) "\n-- \033[0;35mFormatting\033[0m"
