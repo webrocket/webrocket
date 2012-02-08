@@ -16,8 +16,10 @@ endif
 ASCIIDOC=asciidoc
 CAT=cat
 
-all: tools format
+all: tools
 	-@$(ECHO) "\n\033[1;32mCONGRATULATIONS COMRADE!\033[0;32m\nWebRocket has been built and tested!\033[0m\n"
+
+check: tools format
 
 clean: clean-tools
 
