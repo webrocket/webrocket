@@ -48,6 +48,9 @@ explanation what you can find in there.
 'pkg/webrocket'::
 	WebRocket core library
 
+'pkg/kosmonaut'::
+	WebRocket backend client library
+    
 'cmd/webrocket-server'::
 	Tool for starting and preconfiguring single WebRocket
 	server node.

@@ -9,6 +9,8 @@
 	* pkg/kosmonaut/: kosmonaut client moved here, better tests for it.
 	* cmd/webrocket-admin/integration_test.go: added cases for regenerate_vhost_token command
 	* cmd/webrocket-admin/main.go: fixed maybeChannel implx
+	* README: updates
+	* Makefile: added kosmonaut stuff
 
 2012-02-08  Krzysztof Kowalik  <chris@nu7hat.ch>
 
