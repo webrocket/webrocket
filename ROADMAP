@@ -8,6 +8,7 @@ v0.3.x
 * [x] presence/private channels
 * [x] basic (safe enough) authentication and access control
 * [x] admin endpoint and management tool
+* [ ] go client (kosmonaut)
 
 v0.4.x
 ------

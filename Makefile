@@ -36,6 +36,8 @@ tools: clean $(BUILD_MAN)
 	-@$(ECHO) "\n-- \033[0;35mBuilding library and tools\033[0m"
 	-@$(ECHO) "pkg/webrocket"
 	@go build ./pkg/webrocket
+	-@$(ECHO) "pkg/kosmonaut"
+	@go build ./pkg/kosmonaut
 	-@$(ECHO) "cmd/webrocket-server"
 	@go build ./cmd/webrocket-server
 	-@$(ECHO) "cmd/webrocket-admin"
@@ -55,6 +57,11 @@ install-tools:
 	@go install ./cmd/webrocket-server
 	-@$(ECHO) "webrocket-admin"
 	@go install ./cmd/webrocket-admin
+
+install-packages:
+	-@$(ECHO) "\n-- \033[0;36mInstalling packages\033[0m"
+	-@$(ECHO) "github.com/webrocket/webrocket/pkg/kosmonaut"
+	@go install ./pkg/kosmonaut
 
 man: clean-man
 	@$(MAKE) -C docs

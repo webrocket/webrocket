@@ -25,7 +25,7 @@ func init() {
 	go ctx.NewWebsocketEndpoint(":8080").ListenAndServe()
 	go ctx.NewBackendEndpoint(":8081").ListenAndServe()
 	go ctx.NewAdminEndpoint(":8082").ListenAndServe()
-	<-time.After(1e6)
+	<-time.After(1e9)
 }
 
 type cmdtest struct {
