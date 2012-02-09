@@ -87,16 +87,16 @@ func TestVhostOpenChannel(t *testing.T) {
 func TestVhostDeleteChannel(t *testing.T) {
 	v, _ := newTestVhost()
 	v.OpenChannel("hello", ChannelNormal)
-	ok := v.DeleteChannel("hello")
-	if !ok {
+	err := v.DeleteChannel("hello")
+	if err != nil {
 		t.Errorf("Expected to delete channel without errors")
 	}
-	_, ok = v.channels["hello"]
+	_, ok := v.channels["hello"]
 	if ok {
 		t.Errorf("Expected to unregister channel from vhost's channels list")
 	}
-	ok = v.DeleteChannel("hello")
-	if ok {
+	err = v.DeleteChannel("hello")
+	if err == nil {
 		t.Errorf("Expected error while deleting non existing channel")
 	}
 }

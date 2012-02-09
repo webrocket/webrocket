@@ -229,12 +229,9 @@ func maybeChannel(x interface{}) (ch *Channel, ok bool) {
 		return nil, false
 	}
 	if subscribers, ok = data["subscribers"].(map[string]interface{}); !ok {
-		return nil, false
-	}
-	if ssize, ok = subscribers["size"].(float64); !ok {
-		return nil, false
-	} else {
-		ch.SubscribersSize = int(ssize)
+		if ssize, ok = subscribers["size"].(float64); !ok {
+			ch.SubscribersSize = int(ssize)
+		}
 	}
 	ok = true
 	return

@@ -375,7 +375,7 @@ func (ctx *Context) NewWebsocketEndpoint(addr string) Endpoint {
 //
 // Examples
 //
-//     e := ctx.NewBackendEndpoint(":8080")
+//     e := ctx.NewBackendEndpoint(":8081")
 //     if err := e.ListenAndServe(); err != nil {
 //         println(err.Error())
 //     }
@@ -388,4 +388,22 @@ func (ctx *Context) NewBackendEndpoint(addr string) Endpoint {
 	}
 	ctx.backend = be
 	return be
+}
+
+// NewAdminEndpoint creates a new admin endpoint.
+//
+// addr - The host and port to which this endpoint will be bound.
+//
+// Examples
+//
+//     e := ctx.NewAdminEndpoint(":8082")
+//     if err := e.ListenAndServe(); err != nil {
+//         println(err.Error())
+//     }
+//
+// Returns a configured endpoint.
+func (ctx *Context) NewAdminEndpoint(addr string) Endpoint {
+	ae := newAdminEndpoint(ctx, addr)
+	ctx.admin = ae
+	return ae
 }

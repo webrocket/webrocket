@@ -211,16 +211,18 @@ func (v *Vhost) OpenChannel(name string, kind ChannelType) (ch *Channel, err err
 //
 // name - The name of the channel to be deleted.
 //
-// Returns whether this channel has been removed or not.
-func (v *Vhost) DeleteChannel(name string) (ok bool) {
+// Returns an error if something went wrong.
+func (v *Vhost) DeleteChannel(name string) (err error) {
 	v.cmtx.Lock()
 	defer v.cmtx.Unlock()
 	var ch *Channel
+	var ok bool
 	if ch, ok = v.channels[name]; !ok {
+		err = errors.New("channel doesn't exist")
 		return
 	}
 	if v.ctx != nil && v.ctx.isStorageEnabled() {
-		if err := v.ctx.storage.DeleteChannel(ch); err != nil {
+		if err = v.ctx.storage.DeleteChannel(ch); err != nil {
 			return
 		}
 	}

@@ -342,7 +342,7 @@ func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendReques
 	// channel name\n
 	// >>>
 	var chanName string
-	var ok bool
+	var err error
 
 	if req.Len() < 1 {
 		return &Status{"Bad request", 400}
@@ -351,7 +351,7 @@ func (b *BackendEndpoint) handleReqCloseChannel(vhost *Vhost, req *backendReques
 		// No channel name specified.
 		return &Status{"Bad request", 400}
 	}
-	if ok = vhost.DeleteChannel(chanName); !ok {
+	if err = vhost.DeleteChannel(chanName); err != nil {
 		return &Status{"Channel not found", 454}
 	}
 	req.Reply("OK")

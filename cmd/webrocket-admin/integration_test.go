@@ -56,6 +56,12 @@ var expectations = []cmdtest{
 		[]string{"show_vhost", "/hello"},
 		regexp.MustCompile("/hello\n.{40}"),
 	}, {
+		[]string{"regenerate_vhost_token", "foo"},
+		regexp.MustCompile("vhost doesn't exist"),
+	}, {
+		[]string{"regenerate_vhost_token", "/hello"},
+		regexp.MustCompile(".{40}"),
+	}, {
 		[]string{"list_channels", "foo"},
 		regexp.MustCompile("vhost doesn't exist"),
 	}, {

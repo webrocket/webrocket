@@ -178,6 +178,13 @@ func (l *backendLobby) Enqueue(payload interface{}) {
 	l.queue <- payload
 }
 
+// Workers returns list of active workers.
+func (l *backendLobby) Workers() map[string]*BackendWorker {
+	l.mtx.Lock()
+	defer l.mtx.Unlock()
+	return l.workers
+}
+
 // IsAlive returns whether this lobby is running or not.
 func (l *backendLobby) IsAlive() bool {
 	l.mtx.Lock()

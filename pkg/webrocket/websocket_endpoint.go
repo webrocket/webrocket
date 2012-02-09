@@ -32,7 +32,7 @@ type WebsocketEndpoint struct {
 
 	// Context to which the endpoint belongs.
 	ctx *Context
-	// Information whether an endpoint is alive or not.
+	// Information whether the endpoint is alive or not.
 	alive bool
 	// List of registered handlers (handler per vhost).
 	handlers *WebsocketServeMux
@@ -47,10 +47,10 @@ type WebsocketEndpoint struct {
 
 // netWebsocketEndpoint creates new websockets endpoint object configured to
 // be bound to specified address. If no host specified in the address
-// (eg. `:8080`). then will be bound to all available interfaces.
+// (eg. `:8080`), then will be bound to all available interfaces.
 //
-// `ctx`  - The parent context.
-// `addr` - The host and port to which this endpoint will be bound.
+// ctx  - The parent context.
+// addr - The host and port to which this endpoint will be bound.
 //
 // Returns new configured websocket endpoint.
 func newWebsocketEndpoint(ctx *Context, addr string) *WebsocketEndpoint {
@@ -88,7 +88,7 @@ func (w *WebsocketEndpoint) unregisterVhost(vhost *Vhost) {
 // Exported
 // -----------------------------------------------------------------------------
 
-// Addr returns an address to which this endpoint is bound.
+// Addr returns an address to which the endpoint is bound.
 func (w *WebsocketEndpoint) Addr() string {
 	return w.Server.Addr
 }
