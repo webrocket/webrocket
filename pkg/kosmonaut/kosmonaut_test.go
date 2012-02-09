@@ -12,12 +12,12 @@ package kosmonaut
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/webrocket/webrocket/pkg/webrocket"
 	"log"
+	"os"
 	"testing"
 	"time"
-	"os"
-	"fmt"
 )
 
 var (
@@ -28,8 +28,8 @@ var (
 
 type expectation struct {
 	Name   string
-	Action func()(bool)
-	Expect func()(bool)
+	Action func() bool
+	Expect func() bool
 }
 
 func init() {
@@ -58,7 +58,7 @@ func clientConnect(t *testing.T) {
 var expectations = []expectation{
 	{
 		"OpenChannel.1",
-		func() bool { 
+		func() bool {
 			return c.OpenChannel("foo") == nil
 		},
 		func() bool {
@@ -94,7 +94,7 @@ var expectations = []expectation{
 		},
 	}, {
 		"CloseChannel.1",
-		func() bool { 
+		func() bool {
 			return c.CloseChannel("foo") == nil
 		},
 		func() bool {

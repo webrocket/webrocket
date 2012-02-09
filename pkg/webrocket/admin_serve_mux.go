@@ -16,16 +16,16 @@
 package webrocket
 
 import (
-	"strings"
 	"net/http"
+	"strings"
 )
 
 // admnHandlerFunc is a shorthand for the admin interface's handler function.
-type adminHandlerFunc func(*Context, http.ResponseWriter, *http.Request)(int, error)
+type adminHandlerFunc func(*Context, http.ResponseWriter, *http.Request) (int, error)
 
 // AdminServeMux is a simple wrapper for map of admin handler functions,
 // which allows to effectively search for the handlers.
-type AdminServeMux map[string]adminHandlerFunc 
+type AdminServeMux map[string]adminHandlerFunc
 
 // Exported
 // -----------------------------------------------------------------------------
@@ -38,6 +38,6 @@ type AdminServeMux map[string]adminHandlerFunc
 // Returns matching handler function and status.
 func (mux AdminServeMux) Match(method, path string) (adminHandlerFunc, bool) {
 	path = strings.Split(path, "?")[0]
-	handler, ok := mux[method + " " + path]
+	handler, ok := mux[method+" "+path]
 	return handler, ok
 }

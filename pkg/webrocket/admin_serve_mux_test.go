@@ -16,13 +16,13 @@
 package webrocket
 
 import (
-	"testing"
 	"net/http"
+	"testing"
 )
 
 func TestAdminServeMuxMatch(t *testing.T) {
 	mux := AdminServeMux{}
-	mux["GET /foo"] = func(ctx *Context, w http.ResponseWriter, r *http.Request)(int,error) {
+	mux["GET /foo"] = func(ctx *Context, w http.ResponseWriter, r *http.Request) (int, error) {
 		return 0, nil
 	}
 	if _, ok := mux.Match("GET", "/foo?bar=1"); !ok {

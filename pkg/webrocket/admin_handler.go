@@ -16,9 +16,9 @@
 package webrocket
 
 import (
-	"net/http"
-	"errors"
 	"encoding/json"
+	"errors"
+	"net/http"
 )
 
 // adminHandler is a HTTP handler providing RESTful interface for
@@ -84,7 +84,7 @@ func (h *adminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var code int
 	var ok bool
 	var fn adminHandlerFunc
-	
+
 	if !h.authenticate(r) {
 		code, err = http.StatusForbidden, errors.New("access denied")
 		w.WriteHeader(code)
@@ -180,8 +180,8 @@ func adminAddVhost(ctx *Context, w http.ResponseWriter, r *http.Request) (
 		code = adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
-	code = http.StatusFound 
-	w.Header().Set("Location", "/vhost?path=" + path)
+	code = http.StatusFound
+	w.Header().Set("Location", "/vhost?path="+path)
 	w.WriteHeader(code)
 	return
 }
@@ -199,7 +199,7 @@ func adminGetVhost(ctx *Context, w http.ResponseWriter, r *http.Request) (
 		return
 	}
 	code = http.StatusOK
-	channels :=  map[string]interface{}{
+	channels := map[string]interface{}{
 		"self": "/channels?vhost=" + path,
 		"size": len(vhost.Channels()),
 	}
@@ -259,7 +259,7 @@ func adminRegenerateVhostToken(ctx *Context, w http.ResponseWriter, r *http.Requ
 	}
 	vhost.GenerateAccessToken()
 	code = http.StatusFound
-	w.Header().Set("Location", "/vhost?path=" + path)
+	w.Header().Set("Location", "/vhost?path="+path)
 	w.WriteHeader(code)
 	return
 }
@@ -309,7 +309,7 @@ func adminAddChannel(ctx *Context, w http.ResponseWriter, r *http.Request) (
 		return
 	}
 	code = http.StatusFound
-	w.Header().Set("Location", "/channel?vhost=" + path + "&name=" + name)
+	w.Header().Set("Location", "/channel?vhost="+path+"&name="+name)
 	w.WriteHeader(code)
 	return
 }

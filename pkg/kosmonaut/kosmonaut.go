@@ -7,20 +7,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-	
+
 package kosmonaut
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
-	"net/url"
+	uuid "github.com/nu7hatch/gouuid"
 	"net"
-	"time"
+	"net/url"
+	"strconv"
 	"strings"
 	"sync"
-	"bufio"
-	"strconv"
-	"encoding/json"
-	uuid "github.com/nu7hatch/gouuid"
+	"time"
 )
 
 // Error represents a WebRocket protocol error.
@@ -37,12 +37,12 @@ func (err *Error) Error() string {
 // Possible status messages.
 var statusMessages = map[int]string{
 	400: "Bad Request",
-    402: "Unauthorized",
-    403: "Forbidden",
-    451: "Invalid channel name",
-    454: "Channel not found",
-    597: "Internal error",
-    598: "End of file",
+	402: "Unauthorized",
+	403: "Forbidden",
+	451: "Invalid channel name",
+	454: "Channel not found",
+	597: "Internal error",
+	598: "End of file",
 }
 
 // Timeout value for the client requests. 
@@ -259,7 +259,7 @@ func (c *Client) CloseChannel(name string) (err error) {
 //     c.Broadcast("room". "status", {"message" => "is saying hello!"})
 // 
 // Returns an error if something went wrong.
-func (c *Client) Broadcast(channel, event string, data map[string]interface{}) (err error) {	
+func (c *Client) Broadcast(channel, event string, data map[string]interface{}) (err error) {
 	var serialized []byte
 	if serialized, err = json.Marshal(data); err != nil {
 		return
