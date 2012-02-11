@@ -6,6 +6,7 @@ import (
 	"net"
 	"strings"
 	"sync"
+	"time"
 )
 
 // backendConnection implements a wrapper for the TCP connection providing
@@ -101,6 +102,10 @@ func (c *backendConnection) Send(cmd string, frames ...string) (err error) {
 		_, err = c.conn.Write([]byte(payload))
 	}
 	return
+}
+
+func (c *backendConnection) SetDeadline(ddl time.Time) {
+	c.conn.SetDeadline(ddl)
 }
 
 // IsAlive returns whether the underlaying connection is alive or not.

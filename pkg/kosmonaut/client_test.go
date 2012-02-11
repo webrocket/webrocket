@@ -11,48 +11,16 @@
 package kosmonaut
 
 import (
-	"bytes"
-	"fmt"
-	"github.com/webrocket/webrocket/pkg/webrocket"
-	"log"
-	"os"
 	"testing"
-	"time"
+	"fmt"
 )
 
-var (
-	c   *Client
-	v   *webrocket.Vhost
-	ctx *webrocket.Context
-)
+var c *Client
 
 type expectation struct {
 	Name   string
 	Action func() bool
 	Expect func() bool
-}
-
-func init() {
-	os.RemoveAll("./_testdata")
-	ctx = webrocket.NewContext()
-	ctx.SetLog(log.New(bytes.NewBuffer([]byte{}), "", log.LstdFlags))
-	ctx.SetNodeName("test")
-	ctx.SetStorageDir("./_testdata")
-	ctx.Load()
-	v, _ = ctx.AddVhost("/test")
-	ctx.GenerateCookie(false)
-	go ctx.NewWebsocketEndpoint(":8080").ListenAndServe()
-	go ctx.NewBackendEndpoint(":8081").ListenAndServe()
-	go ctx.NewAdminEndpoint(":8082").ListenAndServe()
-	<-time.After(1e9)
-}
-
-func clientConnect(t *testing.T) {
-	var err error
-	c, err = NewClient(fmt.Sprintf("wr://%s@127.0.0.1:8081/test", v.AccessToken()))
-	if err != nil {
-		t.Fatalf("Expected to connect the client, error: %v", err)
-	}
 }
 
 var expectations = []expectation{
@@ -126,7 +94,11 @@ var expectations = []expectation{
 }
 
 func TestClientAPI(t *testing.T) {
-	clientConnect(t)
+	var err error
+	c, err = NewClient(fmt.Sprintf("wr://%s@127.0.0.1:8081/test", v.AccessToken()))
+	if err != nil {
+		t.Fatalf("Expected to connect the client, error: %v", err)
+	}
 	for _, expect := range expectations {
 		if !expect.Action() {
 			t.Errorf("Expected action `%s` to be performed properly", expect.Name)
