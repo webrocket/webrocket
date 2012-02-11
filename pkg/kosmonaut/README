@@ -21,6 +21,23 @@ Here's trivial example of the REQ client usage:
         // ...
     }
 
+And an example ot the SUB worker:
+
+    package main
+
+    import "github.com/webrocket/webrocket/pkg/kosmonaut"
+
+    func main() {
+        c := kosmonaut.NewWorker("wr://{token...}@127.0.0.1:8081/hello")
+        for msg := range c.Run() {
+            if msg.Error != nil {
+                // do something with the error...
+            } else {
+                // do something with the message...
+            }
+        }
+    }
+    
 For more information and examples check the package documentation.
 	
 Copyright

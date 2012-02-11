@@ -1,3 +1,9 @@
+2012-02-13  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* pkg/kosmonaut/worker.go: implemented SUB worker
+	* pkg/kosmonaut/worker_test.go: worker tests
+	* pkg/kosmonaut/*.go: fixes, tweaks and documentation
+
 2012-02-09  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* pkg/webrocket/admin_endpoint.go: done as it should be

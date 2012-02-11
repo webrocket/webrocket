@@ -79,18 +79,18 @@ func (a *BackendWorker) updateExpiration() {
 // by exchanging the hearbeats.
 func (a *BackendWorker) listen() {
 	defer a.Kill()
-	go func() {
-		for {
-			// Send the heartbeat message and update schedule if it's time.
-			a.conn.Send("HB")
-			a.heartbeatAt = time.Now().Add(backendWorkerHeartbeatInterval)
-			<-time.After(backendWorkerHeartbeatInterval)
-		}
-	}()
+	a.heartbeatAt = time.Now()
 	for {
 		if !a.IsAlive() {
 			break
 		}
+		if time.Now().After(a.heartbeatAt) {
+			// Send the heartbeat message and update schedule if it's time.
+			a.conn.Send("HB")
+			a.heartbeatAt = time.Now().Add(backendWorkerHeartbeatInterval)
+		}
+		ddl := time.Now().Add(backendWorkerHeartbeatInterval * 2)
+		a.conn.SetDeadline(ddl)
 		req, err := a.conn.Recv()
 		if err != nil && err == io.EOF {
 			// End of file reached...

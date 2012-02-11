@@ -22,10 +22,13 @@ func init() {
 	ctx.SetStorageDir("./_testdata")
 	ctx.Load()
 	ctx.GenerateCookie(false)
-	go ctx.NewWebsocketEndpoint(":8080").ListenAndServe()
-	go ctx.NewBackendEndpoint(":8081").ListenAndServe()
-	go ctx.NewAdminEndpoint(":8082").ListenAndServe()
-	<-time.After(1e9)
+	admin := ctx.NewAdminEndpoint(":8072")
+	go admin.ListenAndServe()
+	go ctx.NewWebsocketEndpoint(":8070").ListenAndServe()
+	go ctx.NewBackendEndpoint(":8071").ListenAndServe()
+	for !admin.IsAlive() {
+		<-time.After(500 * time.Nanosecond)
+	}
 }
 
 type cmdtest struct {
@@ -130,7 +133,7 @@ var expectations = []cmdtest{
 func TestCommands(t *testing.T) {
 	for _, exp := range expectations {
 		var args []string
-		args = append([]string{"-cookie=" + ctx.Cookie()}, exp.args...)
+		args = append([]string{"-cookie=" + ctx.Cookie(), "-admin-addr=127.0.0.1:8072"}, exp.args...)
 		cmd := exec.Command("../../webrocket-admin", args...)
 		out, _ := cmd.CombinedOutput()
 		if !exp.expect.Match(out) {

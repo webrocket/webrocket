@@ -71,12 +71,13 @@ func newWebsocketMessage(payload map[string]interface{}) (msg *WebsocketMessage,
 	}
 	msg = &WebsocketMessage{}
 	for k := range payload {
+		var ok bool
 		msg.event = k
-	}
-	var ok bool
-	msg.data, ok = payload[msg.event].(map[string]interface{})
-	if !ok {
-		err = errors.New("invalid message data type")
+		if msg.data, ok = payload[msg.event].(map[string]interface{}); !ok {
+			err = errors.New("invalid message data type")
+			return
+		}
+		break
 	}
 	return
 }
