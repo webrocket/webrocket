@@ -11,9 +11,9 @@
 package kosmonaut
 
 import (
+	"errors"
 	"net"
 	"time"
-	"errors"
 )
 
 const (
@@ -71,7 +71,7 @@ func (w *Worker) disconnect() {
 // Returns an error if something went wrong.
 func (w *Worker) reconnect() (err error) {
 	w.disconnect()
-	w.conn, err = w.connect(w.heartbeatIvl * 2 + 1)
+	w.conn, err = w.connect(w.heartbeatIvl*2 + 1)
 	if err != nil {
 		return
 	}
@@ -123,7 +123,7 @@ reconnect:
 			w.disconnect()
 			break
 		}
-		ddl = time.Now().Add(w.heartbeatIvl * 2 + time.Second)
+		ddl = time.Now().Add(w.heartbeatIvl*2 + time.Second)
 		w.conn.SetDeadline(ddl)
 		if rawmsg, err = recv(w.conn); err != nil {
 			// Couldn't get the message, reconnecting...

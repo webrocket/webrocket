@@ -1,8 +1,8 @@
 package kosmonaut
 
 import (
-	"net"
 	"encoding/json"
+	"net"
 	"time"
 )
 

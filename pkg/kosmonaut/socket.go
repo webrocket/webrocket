@@ -1,13 +1,13 @@
 package kosmonaut
 
 import (
+	"bufio"
+	uuid "github.com/nu7hatch/gouuid"
 	"net"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
-	uuid "github.com/nu7hatch/gouuid"
-	"bufio"
-	"strings"
 )
 
 // socket is a base struct for the Client and Worker.

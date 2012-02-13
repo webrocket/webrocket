@@ -1,8 +1,8 @@
 package kosmonaut
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 )
 
 // Message represents single event incoming from the WebRocket server.
@@ -47,7 +47,7 @@ func parseMessage(rawmsg []string, worker *Worker) (msg *Message) {
 	}
 	return
 invalid:
-	msg = &Message{Error:errors.New("invalid message format")}
+	msg = &Message{Error: errors.New("invalid message format")}
 	return
 }
 

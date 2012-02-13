@@ -1,9 +1,9 @@
 package kosmonaut
 
 import (
-	"testing"
 	"code.google.com/p/go.net/websocket"
 	"fmt"
+	"testing"
 )
 
 func TestWorkerFlow(t *testing.T) {

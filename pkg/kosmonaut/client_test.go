@@ -11,8 +11,8 @@
 package kosmonaut
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 var c *Client
