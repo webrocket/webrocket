@@ -154,7 +154,6 @@ func (b *BackendEndpoint) handle(conn net.Conn) {
 
 	c := newBackendConnection(conn)
 	if req, err = c.Recv(); err != nil {
-		println("err")
 		s = &Status{"Bad request", 400}
 		c.Send("ER", "400")
 		goto log

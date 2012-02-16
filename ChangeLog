@@ -1,3 +1,8 @@
+2012-02-16  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* pkg/webrocket/context.go: fixed signal sending
+	* cmd/webrocket-admin/main.go: fixed signal trap
+
 2012-02-13  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* pkg/kosmonaut/worker.go: implemented SUB worker

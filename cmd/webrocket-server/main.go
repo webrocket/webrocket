@@ -18,12 +18,12 @@
 package main
 
 import (
-	"exp/signal"
 	"flag"
 	"fmt"
 	stepper "github.com/nu7hatch/gostepper"
 	"github.com/webrocket/webrocket/pkg/webrocket"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"syscall"
 	"time"
@@ -125,26 +125,12 @@ func SetupEndpoint(kind string, e webrocket.Endpoint) {
 // SignalTrap configures a handlers for various system signals, i.a.
 // it stops the context and cleans everything up when the app is interrupted.
 func SignalTrap() {
-	for sig := range signal.Incoming {
-		if usig, ok := sig.(os.UnixSignal); ok {
-			switch usig {
-			case syscall.SIGQUIT, syscall.SIGINT:
-				fmt.Printf("\n\033[33mInterrupted\033[0m\n")
-				if ctx != nil {
-					fmt.Printf("\n")
-					s.Start("Cleaning up")
-					if err := ctx.Kill(); err != nil {
-						s.Fail(err.Error(), true)
-					}
-					s.Ok()
-				}
-				os.Exit(0)
-			case syscall.SIGTSTP:
-				syscall.Kill(syscall.Getpid(), syscall.SIGSTOP)
-			case syscall.SIGHUP:
-				// TODO: reload configuration
-			}
-		}
+	var interrupted = make(chan os.Signal)
+	signal.Notify(interrupted, syscall.SIGQUIT, syscall.SIGINT)
+	<-interrupted
+	fmt.Printf("\n\033[33mExiting...\033[0m\n")
+	if ctx != nil {
+		ctx.Kill()
 	}
 }
 

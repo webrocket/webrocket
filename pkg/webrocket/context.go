@@ -26,6 +26,7 @@ import (
 	"path"
 	"regexp"
 	"sync"
+	"syscall"
 )
 
 // The length of the cookie string.
@@ -196,7 +197,7 @@ func (ctx *Context) Lock() (err error) {
 		goto lock
 	}
 	if p, err = os.FindProcess(pid); err == nil && p != nil {
-		if err = p.Signal(os.UnixSignal(0)); err == nil {
+		if err = p.Signal(syscall.Signal(0)); err == nil {
 			msg := fmt.Sprintf("node '%s' is already running", ctx.NodeName())
 			return errors.New(msg)
 		}
