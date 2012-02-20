@@ -157,9 +157,11 @@ func adminListVhosts(ctx *Context, w http.ResponseWriter, r *http.Request) (
 	data, i := make([]map[string]interface{}, len(ctx.vhosts)), 0
 	for _, vhost := range ctx.Vhosts() {
 		data[i] = map[string]interface{}{
-			"self":        "/vhost?path=" + vhost.path,
 			"path":        vhost.path,
 			"accessToken": vhost.accessToken,
+			"links": adminHypermediaLinks(
+				[]string{"self", "/vhost?path=" + vhost.path},
+			),
 		}
 		i += 1
 	}
@@ -200,14 +202,18 @@ func adminGetVhost(ctx *Context, w http.ResponseWriter, r *http.Request) (
 	}
 	code = http.StatusOK
 	channels := map[string]interface{}{
-		"self": "/channels?vhost=" + path,
 		"size": len(vhost.Channels()),
+		"links": adminHypermediaLinks(
+			[]string{"self", "/channels?vhost=" + path},
+		),
 	}
 	data := map[string]interface{}{
-		"self":        "/vhost?path=" + path,
 		"path":        path,
 		"accessToken": vhost.accessToken,
 		"channels":    channels,
+		"links": adminHypermediaLinks(
+			[]string{"self", "/vhost?path=" + path},
+		),
 	}
 	w.WriteHeader(code)
 	adminWriteData(w, "vhost", data)
@@ -279,9 +285,11 @@ func adminListChannels(ctx *Context, w http.ResponseWriter, r *http.Request) (
 	data, i := make([]map[string]interface{}, len(vhost.Channels())), 0
 	for _, channel := range vhost.Channels() {
 		data[i] = map[string]interface{}{
-			"self":  "/channel?vhost=" + path,
-			"vhost": "/vhost?path=" + path,
-			"name":  channel.name,
+			"name": channel.name,
+			"links": adminHypermediaLinks(
+				[]string{"self", "/channel?vhost=" + path + "&name=" + channel.name},
+				[]string{"vhost", "/vhost?path=" + path},
+			),
 		}
 		i += 1
 	}
@@ -332,14 +340,18 @@ func adminGetChannel(ctx *Context, w http.ResponseWriter, r *http.Request) (
 		return
 	}
 	subscribers := map[string]interface{}{
-		"self": "/subscribers?vhost=" + path + "&channel=" + name,
 		"size": len(channel.Subscribers()),
+		"links": adminHypermediaLinks(
+			[]string{"self", "/subscribers?vhost=" + path + "&channel=" + name},
+		),
 	}
 	data := map[string]interface{}{
-		"self":        "/channel?vhost=" + path + "&name=" + name,
-		"vhost":       "/vhost?path=" + path,
 		"name":        channel.name,
 		"subscribers": subscribers,
+		"links": adminHypermediaLinks(
+			[]string{"self", "/channel?vhost=" + path + "&name=" + name},
+			[]string{"vhost", "/vhost?path=" + path},
+		),
 	}
 	code = http.StatusOK
 	w.WriteHeader(code)
@@ -404,14 +416,29 @@ func adminListWorkers(ctx *Context, w http.ResponseWriter, r *http.Request) (
 	data, i := make([]map[string]interface{}, len(vhost.lobby.Workers())), 0
 	for _, worker := range vhost.lobby.Workers() {
 		data[i] = map[string]interface{}{
-			"self":  "/worker?vhost=" + path + "&sid=" + worker.id,
-			"vhost": "/vhost?path=" + path,
-			"id":    worker.id,
+			"id": worker.id,
+			"links": adminHypermediaLinks(
+				[]string{"self", "/worker?vhost=" + path + "&sid=" + worker.id},
+				[]string{"vhost", "/vhost?path=" + path},
+			),
 		}
 		i += 1
 	}
 	code = http.StatusOK
 	w.WriteHeader(code)
 	adminWriteData(w, "workers", data)
+	return
+}
+
+// adminHypermediaLinks generates map of links from the given list.
+//
+// links - list of links to pack
+//
+// Returns map of hypermedia links.
+func adminHypermediaLinks(links ...[]string) (res []map[string]interface{}) {
+	res = make([]map[string]interface{}, len(links))
+	for i, link := range links {
+		res[i] = map[string]interface{}{"rel": link[0], "href": link[1]}
+	}
 	return
 }

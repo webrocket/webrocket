@@ -1,3 +1,7 @@
+2012-02-20  Krzysztof Kowalik  <chris@nu7hat.ch>
+
+	* pkg/webrocket/admin_handler.go: fixed hypermedia links
+
 2012-02-16  Krzysztof Kowalik  <chris@nu7hat.ch>
 
 	* pkg/webrocket/context.go: fixed signal sending
