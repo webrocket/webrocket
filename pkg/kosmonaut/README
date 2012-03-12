@@ -28,8 +28,8 @@ And an example ot the SUB worker:
     import "github.com/webrocket/webrocket/pkg/kosmonaut"
 
     func main() {
-        c := kosmonaut.NewWorker("wr://{token...}@127.0.0.1:8081/hello")
-        for msg := range c.Run() {
+        w := kosmonaut.NewWorker("wr://{token...}@127.0.0.1:8081/hello")
+        for msg := range w.Run() {
             if msg.Error != nil {
                 // do something with the error...
             } else {
