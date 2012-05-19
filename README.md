@@ -1,4 +1,4 @@
-# WEBROCKET - Distributed Web Broker for the Masses!
+# WebRocket - Distributed Web Broker!
 
 WebRocket is a hybrid of MQ and WebSockets server with great support for
 horizontal scalability. WebRocket is very fast and easy to use from both
@@ -13,7 +13,7 @@ WebRocket  on various systems, once you have unpacked or checked out the
 entire WebRocket file tree.
 
 ## Release history
----------------
+
 See the file `NEWS.md` for information on new features and other user-visible
 changes in recent versions of WebRocket.
 
@@ -28,7 +28,7 @@ of this document and don't hesitate to send a pull request.
 
 We appreciate any kind of help in WebRocket development and testing.
 If you don't know how can you help us, please check the project's
-issues or 'TODO' file in the project root directory. Before you start
+issues or `TODO.md` file in the project root directory. Before you start
 working on the code, and before you send us a pull request, make sure
 you understand and follow the contributors guide, which you can find
 in the `CONTRIBUTE.md` file.
@@ -41,7 +41,7 @@ explanation what you can find in there.
 * **`docs`** - Documentation and man pages
 * **`engine`** - WebRocket core library
 * **`kosmonaut`** - WebRocket backend client library
-* **`cmd/webrocket-server` - A tool for starting and preconfiguring 
+* **`cmd/webrocket-server`** - A tool for starting and preconfiguring 
   single WebRocket server node.
 * **`cmd/webrocket-admin`** - A tool for ad-hoc configuration management
   of the running WebRocket server nodes.

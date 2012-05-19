@@ -1,21 +1,15 @@
-TODO list
-=========
+# TODO list
 
-webrocket
----------
+## webrocket
+
 * access control for the triggered backend actions
 * clustering support
 * add direct message action (but first investigate if really needed)
-* test admin endpoint & its protocol 
 
-webrocket-server
-----------------
+## webrocket-server
+
 * different tls keys for backend and frontend
 
-webrocket-admin
----------------
-* tests
+## tools
 
-tools
------
 * installing man pages

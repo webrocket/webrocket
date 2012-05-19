@@ -1,5 +1,4 @@
-The `webrocket-server` tool
-===========================
+# WebRocket Server Tool
 
 This tool is used to start and initially configure a single node instance.
 To further configure your node, use the *webrocket-admin*(1) tool.
