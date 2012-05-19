@@ -9,7 +9,7 @@ import (
 func listVhosts(params []string) (err error, ok bool) {
 	var vhosts []interface{}
 	var res *Response
-	res, err = performRequest("GET", "/vhosts", "vhosts", map[string]string{})
+	res, err = performRequest("GET", "/", "vhosts")
 	if err != nil {
 		return
 	}

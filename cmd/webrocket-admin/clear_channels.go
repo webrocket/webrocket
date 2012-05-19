@@ -5,8 +5,6 @@ func clearChannels(params []string) (err error, ok bool) {
 	if vhost, ok = vhostParams(params); !ok {
 		return
 	}
-	_, err = performRequest("DELETE", "/channels", "", map[string]string{
-		"vhost": vhost,
-	})
+	_, err = performRequest("DELETE", vhost+"/channels", "")
 	return
 }

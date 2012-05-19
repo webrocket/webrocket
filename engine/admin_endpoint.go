@@ -51,13 +51,12 @@ type AdminEndpoint struct {
 //
 // Returns new configured admin endpoint.
 func newAdminEndpoint(ctx *Context, addr string) *AdminEndpoint {
+	server := &http.Server{Addr: addr, Handler: newAdminHandler(ctx)}
+
 	return &AdminEndpoint{
-		ctx: ctx,
-		log: ctx.log,
-		Server: &http.Server{
-			Addr:    addr,
-			Handler: newAdminHandler(ctx),
-		},
+		ctx:    ctx,
+		log:    ctx.log,
+		Server: server,
 	}
 }
 

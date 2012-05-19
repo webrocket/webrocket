@@ -18,16 +18,41 @@ package engine
 import (
 	"encoding/json"
 	"errors"
+	"github.com/bmizerany/pat"
 	"net/http"
+	"sync"
 )
 
 // adminHandler is a HTTP handler providing RESTful interface for
 // the admin endpoint. 
 type adminHandler struct {
-	// Parent context.
-	ctx *Context
 	// Handler's multiplexer.
-	mux AdminServeMux
+	mux *pat.PatternServeMux
+}
+
+var (
+	// adminMtx is a mutex for admin context.
+	adminMtx sync.Mutex
+	// adminCtx is a pointer to current context.
+	adminCtx *Context
+	// adminMux is default admin multiplexer.
+	adminMux *pat.PatternServeMux = pat.New()
+)
+
+// Admin handler's initializer
+func init() {
+	adminMux.Post("/:vhost/channels/:channel", http.HandlerFunc(adminAddChannel))
+	adminMux.Get("/:vhost/channels/:channel", http.HandlerFunc(adminGetChannel))
+	adminMux.Del("/:vhost/channels/:channel", http.HandlerFunc(adminDeleteChannel))
+	adminMux.Del("/:vhost/channels", http.HandlerFunc(adminClearChannels))
+	adminMux.Get("/:vhost/workers", http.HandlerFunc(adminListWorkers))
+	adminMux.Get("/:vhost/channels", http.HandlerFunc(adminListChannels))
+	adminMux.Put("/:vhost/token", http.HandlerFunc(adminRegenerateVhostToken))
+	adminMux.Post("/:vhost", http.HandlerFunc(adminAddVhost))
+	adminMux.Get("/:vhost", http.HandlerFunc(adminGetVhost))
+	adminMux.Del("/:vhost", http.HandlerFunc(adminDeleteVhost))
+	adminMux.Get("/", http.HandlerFunc(adminListVhosts))
+	adminMux.Del("/", http.HandlerFunc(adminClearVhosts))
 }
 
 // Internal constructor
@@ -39,7 +64,10 @@ type adminHandler struct {
 //
 // Returns created handler.
 func newAdminHandler(ctx *Context) *adminHandler {
-	return &adminHandler{ctx: ctx, mux: defaultAdminMux}
+	adminMtx.Lock()
+	defer adminMtx.Unlock()
+	adminCtx = ctx
+	return &adminHandler{mux: adminMux}
 }
 
 // Internal
@@ -53,10 +81,10 @@ func newAdminHandler(ctx *Context) *adminHandler {
 //
 func (h *adminHandler) logStatus(r *http.Request, code int, err error) {
 	if err == nil {
-		h.ctx.log.Printf("admin: %s %s; %d %s", r.Method, r.RequestURI,
+		adminCtx.log.Printf("admin: %s %s; %d %s", r.Method, r.RequestURI,
 			code, http.StatusText(code))
 	} else {
-		h.ctx.log.Printf("admin: %s %s; %d %s: %s", r.Method, r.RequestURI,
+		adminCtx.log.Printf("admin: %s %s; %d %s: %s", r.Method, r.RequestURI,
 			code, http.StatusText(code), err.Error())
 	}
 }
@@ -67,7 +95,7 @@ func (h *adminHandler) logStatus(r *http.Request, code int, err error) {
 //
 func (h *adminHandler) authenticate(r *http.Request) bool {
 	cookie := r.Header.Get("X-WebRocket-Cookie")
-	return cookie == h.ctx.Cookie()
+	return cookie == adminCtx.Cookie()
 }
 
 // Exported
@@ -80,47 +108,24 @@ func (h *adminHandler) authenticate(r *http.Request) bool {
 // r - The request to be handled.
 //
 func (h *adminHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var err error
 	var code int
-	var ok bool
-	var fn adminHandlerFunc
 
 	if !h.authenticate(r) {
-		code, err = http.StatusForbidden, errors.New("access denied")
+		code, _ = http.StatusForbidden, errors.New("access denied")
 		w.WriteHeader(code)
-		goto log
+		return
 	}
-	w.Header().Set("X-WebRocket-Cookie", h.ctx.Cookie())
+
+	w.Header().Set("X-WebRocket-Cookie", adminCtx.Cookie())
 	w.Header().Set("Content-Type", "application/json")
 	r.ParseForm()
-	if fn, ok = h.mux.Match(r.Method, r.RequestURI); !ok {
-		code = http.StatusNotFound
-		w.WriteHeader(code)
-		goto log
-	}
-	code, err = fn(h.ctx, w, r)
-log:
-	h.logStatus(r, code, err)
+
+	h.mux.ServeHTTP(w, r)
+	// TODO: log
 }
 
 // Admin interface actions
 // -----------------------------------------------------------------------------
-
-// List of default handlers provided by the admin interface. 
-var defaultAdminMux AdminServeMux = map[string]adminHandlerFunc{
-	"GET /vhosts":      adminListVhosts,
-	"POST /vhosts":     adminAddVhost,
-	"GET /vhost":       adminGetVhost,
-	"DELETE /vhost":    adminDeleteVhost,
-	"DELETE /vhosts":   adminClearVhosts,
-	"PUT /vhost/token": adminRegenerateVhostToken,
-	"GET /channels":    adminListChannels,
-	"POST /channels":   adminAddChannel,
-	"GET /channel":     adminGetChannel,
-	"DELETE /channel":  adminDeleteChannel,
-	"DELETE /channels": adminClearChannels,
-	"GET /workers":     adminListWorkers,
-}
 
 // adminWriteError is a helper to writing error information to the response.
 //
@@ -150,136 +155,117 @@ func adminWriteData(w http.ResponseWriter, namespace string, x interface{}) {
 
 // adminListVhosts shows list of the vhosts.
 //
-// GET /vhosts
+// GET /
 //
-func adminListVhosts(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
-	data, i := make([]map[string]interface{}, len(ctx.vhosts)), 0
-	for _, vhost := range ctx.Vhosts() {
+func adminListVhosts(w http.ResponseWriter, r *http.Request) {
+	data, i := make([]map[string]interface{}, len(adminCtx.vhosts)), 0
+	for _, vhost := range adminCtx.Vhosts() {
 		data[i] = map[string]interface{}{
 			"path":        vhost.path,
 			"accessToken": vhost.accessToken,
 			"links": adminHypermediaLinks(
-				[]string{"self", "/vhost?path=" + vhost.path},
+				[]string{"self", vhost.path},
 			),
 		}
 		i += 1
 	}
-	code = http.StatusOK
-	w.WriteHeader(code)
+	w.WriteHeader(http.StatusOK)
 	adminWriteData(w, "vhosts", data)
-	return
 }
 
 // adminAddVhost creates new vhost.
 //
-// POST /vhosts?path=[...]
+// POST /:vhost
 //
-func adminAddVhost(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
-	path := r.Form.Get("path")
-	if _, err = ctx.AddVhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+func adminAddVhost(w http.ResponseWriter, r *http.Request) {
+	path := "/" + r.URL.Query().Get(":vhost")
+	if _, err := adminCtx.AddVhost(path); err != nil {
+		adminWriteError(w, http.StatusBadRequest, err)
 		return
 	}
-	code = http.StatusFound
-	w.Header().Set("Location", "/vhost?path="+path)
-	w.WriteHeader(code)
-	return
+	w.Header().Set("Location", path)
+	w.WriteHeader(http.StatusFound)
 }
 
 // adminGetVhost shows information about the vhost.
 //
-// GET /vhost?path=[...]
+// GET /:vhost
 //
-func adminGetVhost(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
+func adminGetVhost(w http.ResponseWriter, r *http.Request) {
 	var vhost *Vhost
-	path := r.Form.Get("path")
-	if vhost, err = ctx.Vhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+	var err error
+	path := "/" + r.URL.Query().Get(":vhost")
+	if vhost, err = adminCtx.Vhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
-	code = http.StatusOK
 	channels := map[string]interface{}{
 		"size": len(vhost.Channels()),
-		"links": adminHypermediaLinks(
-			[]string{"self", "/channels?vhost=" + path},
-		),
 	}
 	data := map[string]interface{}{
 		"path":        path,
 		"accessToken": vhost.accessToken,
 		"channels":    channels,
 		"links": adminHypermediaLinks(
-			[]string{"self", "/vhost?path=" + path},
+			[]string{"channels", path + "/channels"},
+			[]string{"self", path},
 		),
 	}
-	w.WriteHeader(code)
+	w.WriteHeader(http.StatusOK)
 	adminWriteData(w, "vhost", data)
-	return
 }
 
 // adminDeleteVhost removes specified vhost.
 //
-// DELETE /vhost?path=[...]
+// DELETE /:vhost
 //
-func adminDeleteVhost(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
-	path := r.Form.Get("path")
-	if err = ctx.DeleteVhost(path); err != nil {
-		code = http.StatusNotFound
-		adminWriteError(w, code, err)
+func adminDeleteVhost(w http.ResponseWriter, r *http.Request) {
+	path := "/" + r.URL.Query().Get(":vhost")
+	if err := adminCtx.DeleteVhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
-	code = http.StatusAccepted
-	w.WriteHeader(code)
-	return
+	w.WriteHeader(http.StatusAccepted)
 }
 
 // adminClearVhosts removes all vhosts.
 //
-// DELETE /vhosts
+// DELETE /
 //
-func adminClearVhosts(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
-	for path := range ctx.vhosts {
-		ctx.DeleteVhost(path)
+func adminClearVhosts(w http.ResponseWriter, r *http.Request) {
+	for path := range adminCtx.vhosts {
+		adminCtx.DeleteVhost(path)
 	}
-	code = http.StatusAccepted
-	w.WriteHeader(code)
-	return
+	w.WriteHeader(http.StatusAccepted)
 }
 
 // adminRegenerateVhostToken generates new access token for the vhost.
 //
-// PUT /vhost/token?vhost=[...]
+// PUT /:vhost/token
 //
-func adminRegenerateVhostToken(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
+func adminRegenerateVhostToken(w http.ResponseWriter, r *http.Request) {
 	var vhost *Vhost
-	path := r.Form.Get("path")
-	if vhost, err = ctx.Vhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+	var err error
+	path := "/" + r.URL.Query().Get(":vhost")
+	if vhost, err = adminCtx.Vhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
 	vhost.GenerateAccessToken()
-	code = http.StatusFound
-	w.Header().Set("Location", "/vhost?path="+path)
-	w.WriteHeader(code)
-	return
+	w.Header().Set("Location", path)
+	w.WriteHeader(http.StatusFound)
 }
 
 // adminListChannels shows list of channels from the specified vhost.
 //
-// GET /channels?vhost=[...]
+// GET /:vhost/channels
 //
-func adminListChannels(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
+func adminListChannels(w http.ResponseWriter, r *http.Request) {
 	var vhost *Vhost
-	path := r.Form.Get("vhost")
-	if vhost, err = ctx.Vhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+	var err error
+	path := "/" + r.URL.Query().Get(":vhost")
+	if vhost, err = adminCtx.Vhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
 	data, i := make([]map[string]interface{}, len(vhost.Channels())), 0
@@ -287,130 +273,122 @@ func adminListChannels(ctx *Context, w http.ResponseWriter, r *http.Request) (
 		data[i] = map[string]interface{}{
 			"name": channel.name,
 			"links": adminHypermediaLinks(
-				[]string{"self", "/channel?vhost=" + path + "&name=" + channel.name},
-				[]string{"vhost", "/vhost?path=" + path},
+				[]string{"self", path + "/channels/" + channel.name},
+				[]string{"vhost", path},
 			),
 		}
 		i += 1
 	}
-	code = http.StatusOK
-	w.WriteHeader(code)
+	w.WriteHeader(http.StatusOK)
 	adminWriteData(w, "channels", data)
-	return
 }
 
 // adminAddChannel creates new channel under the specified vhost.
 //
-// POST /channels?vhost=[...]&name=[...]
+// POST /:vhost/channels/:channel
 //
-func adminAddChannel(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
+func adminAddChannel(w http.ResponseWriter, r *http.Request) {
 	var vhost *Vhost
-	path, name := r.Form.Get("vhost"), r.Form.Get("name")
-	if vhost, err = ctx.Vhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+	var err error
+	path := "/" + r.URL.Query().Get(":vhost")
+	name := r.URL.Query().Get(":channel")
+	if vhost, err = adminCtx.Vhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
 	kind := channelTypeFromName(name)
 	if _, err = vhost.OpenChannel(name, kind); err != nil {
-		code = adminWriteError(w, http.StatusBadRequest, err)
+		adminWriteError(w, http.StatusBadRequest, err)
 		return
 	}
-	code = http.StatusFound
-	w.Header().Set("Location", "/channel?vhost="+path+"&name="+name)
-	w.WriteHeader(code)
+	w.Header().Set("Location", path+"/channels/"+name)
+	w.WriteHeader(http.StatusFound)
 	return
 }
 
 // adminGetChannel displays information about the channel.
 //
-// GET /channel?vhost=[...]&name=[...]
+// GET /:vhost/channels/:channel
 //
-func adminGetChannel(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
+func adminGetChannel(w http.ResponseWriter, r *http.Request) {
 	var vhost *Vhost
 	var channel *Channel
-	path, name := r.Form.Get("vhost"), r.Form.Get("name")
-	if vhost, err = ctx.Vhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+	var err error
+	path := "/" + r.URL.Query().Get(":vhost")
+	name := r.URL.Query().Get(":channel")
+	if vhost, err = adminCtx.Vhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
 	if channel, err = vhost.Channel(name); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
 	subscribers := map[string]interface{}{
 		"size": len(channel.Subscribers()),
-		"links": adminHypermediaLinks(
-			[]string{"self", "/subscribers?vhost=" + path + "&channel=" + name},
-		),
 	}
 	data := map[string]interface{}{
 		"name":        channel.name,
 		"subscribers": subscribers,
 		"links": adminHypermediaLinks(
-			[]string{"self", "/channel?vhost=" + path + "&name=" + name},
-			[]string{"vhost", "/vhost?path=" + path},
+			[]string{"self", path + "/channels/" + name},
+			[]string{"vhost", path},
+			[]string{"subscribers", path + "/channels/" + name + "/subscribers"},
 		),
 	}
-	code = http.StatusOK
-	w.WriteHeader(code)
+	w.WriteHeader(http.StatusOK)
 	adminWriteData(w, "channel", data)
-	return
 }
 
 // adminDeleteChannels removes the channel.
 //
-// DELETE /channel?vhost=[...]&name=[...]
+// DELETE /:vhost/channels/:channel
 //
-func adminDeleteChannel(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
+func adminDeleteChannel(w http.ResponseWriter, r *http.Request) {
 	var vhost *Vhost
-	path, name := r.Form.Get("vhost"), r.Form.Get("name")
-	if vhost, err = ctx.Vhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+	var err error
+	path := "/" + r.URL.Query().Get(":vhost")
+	name := r.URL.Query().Get(":channel")
+	if vhost, err = adminCtx.Vhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
 	if err = vhost.DeleteChannel(name); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
-	code = http.StatusAccepted
-	w.WriteHeader(code)
-	return
+	w.WriteHeader(http.StatusAccepted)
 }
 
 // adminClearChannels removes all the channels.
 //
-// DELETE /channels?vhost=[...]
+// DELETE /:vhost/channels
 //
-func adminClearChannels(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
+func adminClearChannels(w http.ResponseWriter, r *http.Request) {
 	var vhost *Vhost
-	path := r.Form.Get("vhost")
-	if vhost, err = ctx.Vhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+	var err error
+	path := "/" + r.URL.Query().Get(":vhost")
+	if vhost, err = adminCtx.Vhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
 	for name := range vhost.channels {
 		vhost.DeleteChannel(name)
 	}
-	code = http.StatusAccepted
-	w.WriteHeader(code)
-	return
+	w.WriteHeader(http.StatusAccepted)
 }
 
 // adminListWorkers shows list of the active backend workers for the specified
 // vhost.
 //
-// GET /workers?vhost=[...]
+// GET /:vhost/workers
 //
-func adminListWorkers(ctx *Context, w http.ResponseWriter, r *http.Request) (
-	code int, err error) {
+func adminListWorkers(w http.ResponseWriter, r *http.Request) {
 	var vhost *Vhost
-	path := r.Form.Get("vhost")
-	if vhost, err = ctx.Vhost(path); err != nil {
-		code = adminWriteError(w, http.StatusNotFound, err)
+	var err error
+	path := "/" + r.URL.Query().Get(":vhost")
+	if vhost, err = adminCtx.Vhost(path); err != nil {
+		adminWriteError(w, http.StatusNotFound, err)
 		return
 	}
 	data, i := make([]map[string]interface{}, len(vhost.lobby.Workers())), 0
@@ -418,16 +396,14 @@ func adminListWorkers(ctx *Context, w http.ResponseWriter, r *http.Request) (
 		data[i] = map[string]interface{}{
 			"id": worker.id,
 			"links": adminHypermediaLinks(
-				[]string{"self", "/worker?vhost=" + path + "&sid=" + worker.id},
-				[]string{"vhost", "/vhost?path=" + path},
+				[]string{"self", path + "/workers/" + worker.id},
+				[]string{"vhost", path},
 			),
 		}
 		i += 1
 	}
-	code = http.StatusOK
-	w.WriteHeader(code)
+	w.WriteHeader(http.StatusOK)
 	adminWriteData(w, "workers", data)
-	return
 }
 
 // adminHypermediaLinks generates map of links from the given list.

@@ -41,9 +41,6 @@ var expectations = []cmdtest{
 		[]string{"list_vhosts"},
 		regexp.MustCompile("^$"),
 	}, {
-		[]string{"add_vhost", "foo"},
-		regexp.MustCompile("invalid path"),
-	}, {
 		[]string{"add_vhost", "/hello"},
 		regexp.MustCompile("/hello\n.{40}"),
 	}, {
@@ -53,19 +50,19 @@ var expectations = []cmdtest{
 		[]string{"list_vhosts"},
 		regexp.MustCompile("/hello"),
 	}, {
-		[]string{"show_vhost", "foo"},
+		[]string{"show_vhost", "/foobar"},
 		regexp.MustCompile("vhost doesn't exist"),
 	}, {
 		[]string{"show_vhost", "/hello"},
 		regexp.MustCompile("/hello\n.{40}"),
 	}, {
-		[]string{"regenerate_vhost_token", "foo"},
+		[]string{"regenerate_vhost_token", "/foobar"},
 		regexp.MustCompile("vhost doesn't exist"),
 	}, {
 		[]string{"regenerate_vhost_token", "/hello"},
 		regexp.MustCompile(".{40}"),
 	}, {
-		[]string{"list_channels", "foo"},
+		[]string{"list_channels", "/foobar"},
 		regexp.MustCompile("vhost doesn't exist"),
 	}, {
 		[]string{"list_channels", "/hello"},
@@ -74,7 +71,7 @@ var expectations = []cmdtest{
 		[]string{"add_channel", "/hello", "==="},
 		regexp.MustCompile("invalid channel name"),
 	}, {
-		[]string{"add_channel", "foo", "world"},
+		[]string{"add_channel", "/foobar", "world"},
 		regexp.MustCompile("vhost doesn't exist"),
 	}, {
 		[]string{"add_channel", "/hello", "world"},
@@ -86,7 +83,7 @@ var expectations = []cmdtest{
 		[]string{"delete_channel", "/hello", "foo"},
 		regexp.MustCompile("channel doesn't exist"),
 	}, {
-		[]string{"delete_channel", "foo", "world"},
+		[]string{"delete_channel", "/foobar", "world"},
 		regexp.MustCompile("vhost doesn't exist"),
 	}, {
 		[]string{"delete_channel", "/hello", "world"},
@@ -98,7 +95,7 @@ var expectations = []cmdtest{
 		[]string{"add_channel", "/hello", "bar"},
 		regexp.MustCompile("^$"),
 	}, {
-		[]string{"clear_channels", "foo"},
+		[]string{"clear_channels", "/foobar"},
 		regexp.MustCompile("vhost doesn't exist"),
 	}, {
 		[]string{"clear_channels", "/hello"},
@@ -107,7 +104,7 @@ var expectations = []cmdtest{
 		[]string{"list_channels", "/hello"},
 		regexp.MustCompile("^$"),
 	}, {
-		[]string{"delete_vhost", "foo"},
+		[]string{"delete_vhost", "/foobar"},
 		regexp.MustCompile("vhost doesn't exist"),
 	}, {
 		[]string{"delete_vhost", "/hello"},

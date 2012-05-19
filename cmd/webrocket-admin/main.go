@@ -7,7 +7,6 @@ import (
 	"fmt"
 	webrocket "github.com/webrocket/webrocket/engine"
 	"net/http"
-	"net/url"
 	"os"
 )
 
@@ -48,7 +47,7 @@ var Commands = []*Command{
 	&Command{"list_channels", listChannels, "[vhost]", "Shows list of channels opened under given vhost"},
 	&Command{"add_channel", addChannel, "[vhost] [name]", "Opens new channel under given vhost"},
 	&Command{"delete_channel", deleteChannel, "[vhost] [name]", "Removes channel from the specified vhost"},
-	&Command{"clear_channels", clearChannels, "[vhost] [name]", "Removes all channel from the specified vhost"},
+	&Command{"clear_channels", clearChannels, "[vhost]", "Removes all channel from the specified vhost"},
 	&Command{"list_workers", listWorkers, "[vhost]", "Shows list of the backend workers connected to the specified vhost"},
 }
 
@@ -77,21 +76,19 @@ type Response struct {
 // urlFor generates full request URL for specified path and map
 // of parameters.
 //
-// path   - Request path
-// params - Query parameters
+// path - Request path
 //
 // Examples
 //
-//     urlFor("/hello", map[string]string{"who": "world"})
-//     // => http://host:8083/hello?who=world
+//     urlFor("/hello")
+//     // => http://host:8083/hello
 //
 // Returns full URL.
-func urlFor(path string, params map[string]string) string {
-	form := &url.Values{}
-	for key, value := range params {
-		form.Set(key, value)
+func urlFor(path string) string {
+	if len(path) == 0 || path[0] != '/' {
+		path = "/" + path
 	}
-	return "http://" + Addr + path + "?" + form.Encode()
+	return "http://" + Addr + path
 }
 
 // performRequest prepares and performs request of specified method
@@ -101,13 +98,12 @@ func urlFor(path string, params map[string]string) string {
 // method    - Request method ("GET", "POST", etc.).
 // path      - Request path (eg. "/hello").
 // namespace - The JSON namespace to decode from.
-// params    - A map of request parameters.
 //
 // Returns decoded response.
-func performRequest(method, path, namespace string, params map[string]string) (
+func performRequest(method, path, namespace string) (
 	*Response, error) {
 	c := &http.Client{}
-	req, _ := http.NewRequest(method, urlFor(path, params), nil)
+	req, _ := http.NewRequest(method, urlFor(path), nil)
 	req.Header.Set("X-WebRocket-Cookie", Cookie)
 	res, err := c.Do(req)
 	if err != nil {

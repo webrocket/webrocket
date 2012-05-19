@@ -12,10 +12,7 @@ func addChannel(params []string) (err error, ok bool) {
 	if vhost, name, ok = channelParams(params); !ok {
 		return
 	}
-	_, err = performRequest("POST", "/channels", "channel", map[string]string{
-		"vhost": vhost,
-		"name":  name,
-	})
+	_, err = performRequest("POST", vhost+"/channels/"+name, "channel")
 	if err != nil {
 		return
 	}

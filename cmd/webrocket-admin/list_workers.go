@@ -13,9 +13,7 @@ func listWorkers(params []string) (err error, ok bool) {
 	if vhost, ok = vhostParams(params); !ok {
 		return
 	}
-	res, err = performRequest("GET", "/workers", "workers", map[string]string{
-		"vhost": vhost,
-	})
+	res, err = performRequest("GET", vhost+"/workers", "workers")
 	if err != nil {
 		return
 	}

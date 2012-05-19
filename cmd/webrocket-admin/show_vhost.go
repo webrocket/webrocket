@@ -8,9 +8,7 @@ func showVhost(params []string) (err error, ok bool) {
 	if path, ok = vhostParams(params); !ok {
 		return
 	}
-	res, err = performRequest("GET", "/vhost", "vhost", map[string]string{
-		"path": path,
-	})
+	res, err = performRequest("GET", path, "vhost")
 	if err != nil {
 		return
 	}

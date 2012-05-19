@@ -5,8 +5,6 @@ func deleteVhost(params []string) (err error, ok bool) {
 	if path, ok = vhostParams(params); !ok {
 		return
 	}
-	_, err = performRequest("DELETE", "/vhost", "", map[string]string{
-		"path": path,
-	})
+	_, err = performRequest("DELETE", path, "")
 	return
 }

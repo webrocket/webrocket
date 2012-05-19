@@ -15,9 +15,7 @@ func addVhost(params []string) (err error, ok bool) {
 	if path, ok = vhostParams(params); !ok {
 		return
 	}
-	res, err = performRequest("POST", "/vhosts", "vhost", map[string]string{
-		"path": path,
-	})
+	res, err = performRequest("POST", path, "vhost")
 	if err != nil {
 		return
 	}

@@ -8,9 +8,7 @@ func regenerateVhostToken(params []string) (err error, ok bool) {
 	if path, ok = vhostParams(params); !ok {
 		return
 	}
-	res, err = performRequest("PUT", "/vhost/token", "vhost", map[string]string{
-		"path": path,
-	})
+	res, err = performRequest("PUT", path+"/token", "vhost")
 	if err != nil {
 		return
 	}
