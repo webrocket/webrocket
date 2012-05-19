@@ -1,8 +1,7 @@
-Release history
-===============
+# Release history
 
-v0.3.0 (unreleased)
--------------------
+## v0.3.0 (unreleased)
+
 * Improvements in WebSockets API (publish renamed to broadcast)
 * Better errors handling
 * Support for dynamically managed vhosts and users
@@ -11,25 +10,25 @@ v0.3.0 (unreleased)
 * Added manual entries for the library and tools
 * Better build tools
 
-v0.2.0
-------
+## v0.2.0
+
 * Refactored and standarized JSON-based protocol
 * CLI adapted to new protocol
 * Added more flexible configuration
 
-v0.1.1
-------
+## v0.1.1
+
 * Fixed panics caused by logging
 
-v0.1.0
-------
+## v0.1.0
+
 * Advanced logging (logging to files, separate loggers for hubs, ...)
 * Fully-functional CLI with JSON config files support
 * Optimized broadcasting
 * Bugfixes
 
-v0.0.1
-------
+## v0.0.1
+
 * Default JSON handler
 * Custom handlers interface
 * Non-blocking broadcast

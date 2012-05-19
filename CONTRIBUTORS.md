@@ -1,3 +1,5 @@
+# Contributors
+
 The following people has been contributing to the project:
 
 * Krzysztof Kowalik <chris@nu7hat.ch>
