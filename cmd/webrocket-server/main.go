@@ -21,7 +21,7 @@ import (
 	"flag"
 	"fmt"
 	stepper "github.com/nu7hatch/gostepper"
-	"github.com/webrocket/webrocket/pkg/webrocket"
+	webrocket "github.com/webrocket/webrocket/engine"
 	"os"
 	"os/signal"
 	"path/filepath"

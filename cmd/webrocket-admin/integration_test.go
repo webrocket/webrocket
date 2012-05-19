@@ -2,7 +2,7 @@ package main
 
 import (
 	"bytes"
-	"github.com/webrocket/webrocket/pkg/webrocket"
+	webrocket "github.com/webrocket/webrocket/engine"
 	"log"
 	"os"
 	"os/exec"

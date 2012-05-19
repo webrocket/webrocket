@@ -5,7 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"github.com/webrocket/webrocket/pkg/webrocket"
+	webrocket "github.com/webrocket/webrocket/engine"
 	"net/http"
 	"net/url"
 	"os"
